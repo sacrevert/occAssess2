@@ -29,6 +29,7 @@
 #' @seealso \code{\link{assessSpatialBias}} which gives a measure of how far your data eviates from a random distribution in space. 
 #' @importFrom rasterVis gplot
 #' @importFrom ggplot2 map_data
+#' @importFrom maps map
 #' @export
 
 assessSpatialCov <- function(dat,
@@ -177,7 +178,7 @@ assessSpatialCov <- function(dat,
   }
   
   
-  myCol <- rgb(255,255,255, max = 255, alpha = 125, names = "blue50")
+  myCol <- grDevices::rgb(255,255,255, max = 255, alpha = 125, names = "blue50")
 
   ## add lapply to return multiple plots as a list
 
@@ -238,7 +239,7 @@ assessSpatialCov <- function(dat,
                     n <- length(unique(raster::getValues(get(paste0("rasts", x)))))
                     
                     p <- p + ggplot2::geom_tile(ggplot2::aes(fill = factor(value))) +
-                      ggplot2::scale_fill_manual(values = terrain.colors(n, rev = TRUE), 
+                      ggplot2::scale_fill_manual(values = grDevices::terrain.colors(n, rev = TRUE),
                                                  na.value = myCol, name = leg,
                                                  na.translate = FALSE) +
                       ggplot2::ggtitle(x)

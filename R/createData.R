@@ -1,4 +1,3 @@
-#' @import dplyr
 #### internal function to convert users' data to occAssess-friendly format
 createData <- function(data, 
                        species,
@@ -9,11 +8,11 @@ createData <- function(data,
                        identifier) {
 
   dat <- data.frame(species = data[, species],
-                    x = pull(data, x),
-                    y = pull(data, y),
-                    year = pull(data, year),
-                    spatialUncertainty = pull(data, spatialUncertainty),
-                    identifier = pull(data, identifier))
+                    x = dplyr::pull(data, x),
+                    y = dplyr::pull(data, y),
+                    year = dplyr::pull(data, year),
+                    spatialUncertainty = dplyr::pull(data, spatialUncertainty),
+                    identifier = dplyr::pull(data, identifier))
 
     return(dat)
 }

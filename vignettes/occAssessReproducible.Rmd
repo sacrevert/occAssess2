@@ -1,13 +1,19 @@
 ---
-title: 'Worked example 3: A fully reproducible case study with simulated data'
-output: word_document
+title: "Worked example 3: A fully reproducible case study with simulated data"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{A Fully Reproducible Case Study with Simulated Data}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
-
-
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.height = 4,
+                      fig.width = 7)
+set.seed(2021)
+```
 
 ```{r sim1}
-if (!"occAssess" %in% installed.packages()) devtools::install_github("https://github.com/robboyd/occAssess")
 library(occAssess)
 ```
 
