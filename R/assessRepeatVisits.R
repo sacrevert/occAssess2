@@ -63,8 +63,8 @@ assessRepeatVisits <- function(dat, periods, spatRes) {
              ggplot2::geom_freqpoly() +
       ggplot2::xlab("Visits / years") +
       ggplot2::theme_linedraw() +
-      xlim(c(0, 20)) +
-      facet_wrap(~identifier)
+      ggplot2::xlim(c(0, 20)) +
+      ggplot2::facet_wrap(~identifier)
 
     return(list(data = out,
                 plot = p))

@@ -1,5 +1,5 @@
 Package: occAssess
-Title: Screen species occurrence data for biases
+Title: Screen Species Occurrence Data for Biases
 Version: 1.3.0
 Authors@R: 
     person(given = "Rob",
@@ -17,7 +17,6 @@ LazyDataCompression: xz
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Imports:
-    devtools,
     ggplot2,
     raster,
     spatstat.geom,

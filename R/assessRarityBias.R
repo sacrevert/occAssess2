@@ -139,7 +139,7 @@ assessRarityBias <- function(dat,
                       
                     } else {
                       
-                      mod <- cor(stats$recs, stats$cells)
+                      mod <- stats::cor(stats$recs, stats$cells)
                       
                     }
                     
