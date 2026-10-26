@@ -192,7 +192,7 @@ if (degrade == TRUE & any(duplicated(dat[, c("x", "y", "identifier", "Period")])
     ggplot2::ylab("Nearest neighbour index") +
     ggplot2::labs(fill = "") +
     ggplot2::xlab("Period") +
-    ggplot2::guides(colour = FALSE)
+    ggplot2::guides(colour = "none")
 
   return(list(data = data, 
               plot = p))
