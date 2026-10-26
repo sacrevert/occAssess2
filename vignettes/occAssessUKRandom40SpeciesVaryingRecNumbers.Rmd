@@ -81,7 +81,7 @@ str(nRec$data)
 nRec$plot
 ```
 
-![plot of chunk out3](figure/out3-1.png)
+![plot of chunk out3](images/out3-1.png)
 
 This function enables researchers to quickly establish how the number of records has changed over time. 
 
@@ -110,7 +110,7 @@ str(nSpec$data)
 nSpec$plot
 ```
 
-![plot of chunk out4](figure/out4-1.png)
+![plot of chunk out4](images/out4-1.png)
 
 #### assessSpeciesID 
 
@@ -138,7 +138,7 @@ str(propID$data)
 propID$plot + ggplot2::ylim(c(0,1)) ## it is easy to modify the outputs of the functions in occAssess to e.g. change axis ranges
 ```
 
-![plot of chunk out5](figure/out5-1.png)
+![plot of chunk out5](images/out5-1.png)
 
 The argument "type" can take the values proportion (proportion of records identified to species level) or count (number of records identified to species level). 
 
@@ -169,7 +169,7 @@ str(taxBias$data)
 taxBias$plot + ggplot2::ylim(c(0,1))
 ```
 
-![plot of chunk out6](figure/out6-1.png)
+![plot of chunk out6](images/out6-1.png)
 
 Note the warning message which tells us that there are low numbers of species in some periods (not surprising as the data only contain five species). This represents a small sample size for the regression of range size on number of records so the results should be viewed with caution. 
 
@@ -213,14 +213,14 @@ map <- assessSpatialCov(dat = spDat,
 map$survey1
 ```
 
-![plot of chunk out7](figure/out7-1.png)
+![plot of chunk out7](images/out7-1.png)
 
 ```r
 
 map$survey2
 ```
 
-![plot of chunk out7](figure/out7-2.png)
+![plot of chunk out7](images/out7-2.png)
 
 As you can see there are three new arguments to be specified. res is the spatial resolution at which you would like to map the data (units depend on you coordinate reference system, e.g. m if easting and northing, and decimal degress in lon/ lat); logCount indicates whether or not you would like to log10 transform the counts for visual purposes; countries defines the countries covered by your data; and shp is  shapefile delimiting your study area if countries are NULL. The countries argument is the simplest way to specify your study boundaries if you are working at country or international level and on the WGS84 lat/ lon coordinate reference system. If you are not working on WGS84, or at a country/ international level, then you will need to provide a shapefile to shp delimiting your boundaries for plotting.
 
@@ -271,7 +271,7 @@ str(spatBias$data)
 spatBias$plot + ggplot2::ylim(c(0, 2.15)) # ylim set to theoretical range of possible values for the nearest neighbour index
 ```
 
-![plot of chunk unnamed-chunk-2](figure/unnamed-chunk-2-1.png)
+![plot of chunk unnamed-chunk-2](images/unnamed-chunk-2-1.png)
 
 The argument nSamps indicates how many random distributions should be drawn, and the argument degrade = TRUE indicates that any duplicated coordinates within a time period and for a given level of identifier are removed. The shaded regions on the plot indicate the 5th and 95th percentiles of the nearest neighbour index calculated over nSamps random samples. 
 
@@ -313,5 +313,5 @@ envBias <- assessEnvBias(dat = spDat,
 envBias$plot
 ```
 
-![plot of chunk out10](figure/out10-1.png)
+![plot of chunk out10](images/out10-1.png)
 The arguments yPC and xPC indicate which principal components you would like on the y and x axes, respectively. 
