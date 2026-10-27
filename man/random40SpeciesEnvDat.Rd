@@ -3,24 +3,25 @@
 \docType{data}
 \name{random40SpeciesEnvDat}
 \alias{random40SpeciesEnvDat}
-\title{Background environmental data at the locations of the simulated data random40Species.}
+\title{Environmental data at the locations in \code{random40Species}}
 \format{
-An object of class \code{"data.frame"}
+A data frame with 40,000 rows and 19 environmental variables.
 }
 \source{
-\href{10.1002/joc.5086}{doi}
+WorldClim 2, \doi{10.1002/joc.5086}
 }
 \usage{
 data(random40SpeciesEnvDat)
 }
 \description{
-Environmental data from worldclim layers (worldclim.org) at the locations of the simulated data..
+Environmental data from WorldClim layers. Rows correspond one-for-one and in
+the same order as \code{random40Species}.
 }
 \examples{
 data(random40SpeciesEnvDat)
 }
 \references{
 Fick and Hijmans. (2017) International Journal of Climatology.
-(\href{10.1002/joc.5086}{doi})
+\doi{10.1002/joc.5086}
 }
 \keyword{datasets}

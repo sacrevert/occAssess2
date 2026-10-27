@@ -1,4 +1,4 @@
-#' \code{assessSpatialCov}
+#' Map gridded spatial coverage
 #'
 #' This function grids and then maps species occurrence data.
 #' @param dat string. A data.frame containing columns for species name, x coordinates, y coordinates, spatialUncertainty, year and an identifier (used to group the data - heuristic will be calculated for each group). 
@@ -17,7 +17,7 @@
 #'        be left unspecified, but in this case no country borders will be presented on the returned plots. Do not specify both countries and shp.
 #' @param shp String. If you are not working on WGS84, then you can provide a shapefile (spatialPolygons or spatialPolygonsDataFrame) with the country borders on the relevant crs for plotting. As with countries, 
 #'            if the levels in identifier denote spatial subsets of the data, then shp may be provided as a list, with the name of each element corresponding to one level of the identifier field in dat. 
-#'            Do not specify both countries and dat.
+#'            Do not specify both countries and shp.
 #' @param maxSpatUncertainty Numeric. Maximum permitted spatial uncertainty. All records more uncertain than this value will be dropped. Units must match the units in your data.
 #' @param output String. Either "density", "overlap" or "nPeriods". If density then the maps show the density of records (grid cell^-1) per period and level of identifier. 
 #'               If overlap then one map is returned per level of identifier showing which cells have been sampled in >= \code{minPeriods} periods.
@@ -25,8 +25,12 @@
 #' @param minPeriods Numeric. Lower limit of periods with sampling for cells to show up on the map. Defaults to NULL in which case only grid cells sampled in all \code{periods} are shown. This argument
 #'                   only applies if \code{output} = "overlap".
 #' @param returnRaster Logical. Whether or not to return rasters underpinning maps. This might be useful if you want to manipulate them in some way (e.g. convert the number of periods sampled to the proportion of periods samples, etc.).                    
-#' @return By default alist with n ggplot2 objects where n is the number of levels in the identifier field of dat. Where \code{output} = density return one map per level of identifier.
-#' @seealso \code{\link{assessSpatialBias}} which gives a measure of how far your data eviates from a random distribution in space. 
+#' @return By default, a named list of ggplot objects, one per identifier;
+#'   density plots are faceted by period. If \code{returnRaster = TRUE}, returns
+#'   a list with \code{plots} (that named plot list) and \code{rasters} (a
+#'   RasterStack containing the corresponding raster results).
+#' @seealso \code{\link{assessSpatialBias}} which measures deviation from a
+#'   random spatial distribution.
 #' @importFrom rasterVis gplot
 #' @importFrom ggplot2 map_data
 #' @importFrom maps map

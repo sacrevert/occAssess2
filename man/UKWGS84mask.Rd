@@ -3,15 +3,16 @@
 \docType{data}
 \name{UKWGS84mask}
 \alias{UKWGS84mask}
-\title{Example mask layer for assessSpatialBias(). .}
+\title{Example UK mask for \code{assessSpatialBias()}}
 \format{
-An object of class \code{"data.frame"}
+A \code{RasterLayer} object.
 }
 \usage{
 data(UKWGS84mask)
 }
 \description{
-Raster layer defining UK with finite values and elsewhere as NA.
+Raster layer in WGS84 longitude/latitude with finite values inside the UK
+sampling domain and \code{NA} elsewhere.
 }
 \examples{
 data(UKWGS84mask)

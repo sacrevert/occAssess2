@@ -1,12 +1,13 @@
-#' Example mask layer for assessSpatialBias(). .
+#' Example UK mask for \code{assessSpatialBias()}
 #'
-#' Raster layer defining UK with finite values and elsewhere as NA. 
+#' Raster layer in WGS84 longitude/latitude with finite values inside the UK
+#' sampling domain and \code{NA} elsewhere.
 #'
 #' @docType data
 #'
 #' @usage data(UKWGS84mask)
 #'
-#' @format An object of class \code{"data.frame"}
+#' @format A \code{RasterLayer} object.
 #'
 #' @keywords datasets
 #'

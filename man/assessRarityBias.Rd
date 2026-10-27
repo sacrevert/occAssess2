@@ -2,7 +2,7 @@
 % Please edit documentation in R/assessRarityBias.R
 \name{assessRarityBias}
 \alias{assessRarityBias}
-\title{\code{assessRarityBias}}
+\title{Assess association between recorded range size and record count}
 \usage{
 assessRarityBias(
   dat,
@@ -38,19 +38,23 @@ assessRarityBias(
 
 \item{res}{Numeric. Spatial resolution at which to grid the data for estimation of range size.}
 
-\item{prevPerPeriod}{Logical. If TRUE then prevalence (number of grid cells with data) is calculated per period and if FALSE then prevalence is calculated over all periods.}
+\item{prevPerPeriod}{Logical. If \code{TRUE}, occupied cells are calculated
+separately for each period. If \code{FALSE}, occupied cells for a species
+are calculated across all selected periods.}
 
 \item{maxSpatUncertainty}{Numeric. Maximum permitted spatial uncertainty. All records more uncertain than this value will be dropped. Units must match the units in your data.}
 
-\item{metric}{String. One of "r2" (coefficient of variation) or "cor" (Pearson's correlation coefficient). Two ways of summarising the linear regressions of sample size on recorded range size.
-Note that, for large sample size, use of "cor" is more computationally demanding than "r2".}
+\item{metric}{Character string. \code{"r2"} returns the coefficient of
+determination from the linear regression; \code{"cor"} returns Pearson's
+correlation coefficient.}
 }
 \value{
-A list with two elements: a ggplot2 object and the data underpinning the plot.
+A list with \code{plot}, a ggplot object, and \code{data}, a data
+frame containing \code{period}, \code{id}, and \code{index}.
 }
 \description{
-This function assesses the proportionality of species observed range sizes and number of records. For each period, the function regresses
-the number of grid cells with records (proxy for range size) on the number of records. It uses the r2 value from these regressions
-as an index proportionality between the two measures. A lower r2 indicates lower proportionality between range size and the number of records relative
-to a higher score. Note that an index will not be calculated for any period/ identifier combination with fewer than 5 species. In these cases the regressions on which the indices are based are likely meaningless.
+For each period and identifier, regresses species record count on the number
+of occupied grid cells, used as a proxy for recorded range size. The summary
+is either the coefficient of determination or Pearson correlation. No index
+is calculated for combinations containing fewer than five species.
 }

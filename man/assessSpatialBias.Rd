@@ -2,7 +2,7 @@
 % Please edit documentation in R/assessSpatialBias.R
 \name{assessSpatialBias}
 \alias{assessSpatialBias}
-\title{\code{assessSpatialBias}}
+\title{Assess spatial pattern relative to random samples}
 \usage{
 assessSpatialBias(
   dat,
@@ -42,7 +42,8 @@ mask may have fewer layers than the number of levels in identifier field when id
 in mask will be dropped. If nlayers(mask) > 1, i.e. if the identifier field is used to subset the data spatially, then names(mask) should match the names in the identifier field.
 Must be NA where points are not to be generated, and numeric where they may be generated. For example, this could be a map of worldclim climate data, cropped to the study region.}
 
-\item{nSamps}{Logical. How many iterations of random samples to use for comparison of empirical NN index with random NN index.}
+\item{nSamps}{Positive integer giving the number of random samples used to
+compare the empirical and random nearest-neighbour distances.}
 
 \item{degrade}{Logical. Whether or not to remove duplicated coordinates from the data. Coordinates are not considered to be duplicated if they are from
 different \code{periods}.}
@@ -50,15 +51,18 @@ different \code{periods}.}
 \item{maxSpatUncertainty}{Numeric. Maximum permitted spatial uncertainty. All records more uncertain than this value will be dropped. Units must match the units in your data.}
 }
 \value{
-A list with two elements: a ggplot2 object and the data underpinning the plot.
+A list with \code{data}, a data frame containing mean, 5th-percentile,
+and 95th-percentile nearest-neighbour indices by period and identifier; and
+\code{plot}, a ggplot object.
 }
 \description{
-This function calculates how far the data deviates from a random distribution in geographic space. It calculates
-a nearest neighbour index, defined as the mean of the nearest neighbour distances of the emprical data divided by
-the mean of the neares neighbour distances of a random sample. The user can choose how many random samples to average
-over, which should be larger where there are fewer data. This is because the random samples are generated in equal number to
-the data. Where the number of samples is > 1, the estimates come with a measures of uncertainty (5th and 95th percentiles).
-The index is calculated for each of n user-specified time periods.
+Calculates a nearest-neighbour index for each period and identifier. The
+empirical mean nearest-neighbour distance is divided by the corresponding
+mean from each random sample drawn within \code{mask}; the returned mean,
+5th percentile, and 95th percentile summarise those comparisons. Random
+samples contain the same number of points as the retained occurrence data,
+up to the number of available raster cells. Results are stochastic unless
+the caller sets the random-number seed.
 }
 \seealso{
 \code{\link{assessSpatialCov}} which maps your data in geographical space.

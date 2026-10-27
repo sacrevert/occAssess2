@@ -2,7 +2,7 @@
 % Please edit documentation in R/assessSpeciesID.R
 \name{assessSpeciesID}
 \alias{assessSpeciesID}
-\title{\code{assessSpeciesID}}
+\title{Summarise records identified to species level}
 \usage{
 assessSpeciesID(
   dat,
@@ -18,7 +18,8 @@ assessSpeciesID(
 )
 }
 \arguments{
-\item{dat}{string. A data.frame containing columns for species name, x coordinates, y coordinates, spatialUncertainty, year and an identifier (used to group the data - heuristic will be calculated for each group).}
+\item{dat}{A data frame containing species, coordinate, year,
+spatial-uncertainty, and identifier columns.}
 
 \item{species}{Character string. column name in dat giving species names.}
 
@@ -34,13 +35,16 @@ assessSpeciesID(
 
 \item{periods}{String. A list of time periods. For example, for two periods, the first spanning 1950 to 1990, and the second 1991 to 2019: periods = list(1950:1990, 1991:2019).}
 
-\item{type}{String. "proportion" or "count".}
+\item{type}{Character string: \code{"proportion"} or \code{"count"}.}
 
 \item{maxSpatUncertainty}{Numeric. Maximum permitted spatial uncertainty. All records more uncertain than this value will be dropped. Units must match the units in your data.}
 }
 \value{
-A list with two elements: a ggplot2 object and the data underpinning the plot.
+A list with \code{data}, a data frame containing \code{prop},
+\code{group}, and \code{Period}; and \code{plot}, a ggplot object. The
+\code{prop} column contains proportions or counts according to \code{type}.
 }
 \description{
-This function calculates the proportion (or counts) of records identified to species level over time..
+Calculates the proportion or count of records with a non-missing species
+value in each period and identifier group.
 }

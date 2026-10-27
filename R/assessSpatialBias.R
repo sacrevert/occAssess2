@@ -1,11 +1,12 @@
-#' \code{assessSpatialBias}
+#' Assess spatial pattern relative to random samples
 #'
-#' This function calculates how far the data deviates from a random distribution in geographic space. It calculates
-#' a nearest neighbour index, defined as the mean of the nearest neighbour distances of the emprical data divided by
-#' the mean of the neares neighbour distances of a random sample. The user can choose how many random samples to average
-#' over, which should be larger where there are fewer data. This is because the random samples are generated in equal number to
-#' the data. Where the number of samples is > 1, the estimates come with a measures of uncertainty (5th and 95th percentiles). 
-#' The index is calculated for each of n user-specified time periods.
+#' Calculates a nearest-neighbour index for each period and identifier. The
+#' empirical mean nearest-neighbour distance is divided by the corresponding
+#' mean from each random sample drawn within \code{mask}; the returned mean,
+#' 5th percentile, and 95th percentile summarise those comparisons. Random
+#' samples contain the same number of points as the retained occurrence data,
+#' up to the number of available raster cells. Results are stochastic unless
+#' the caller sets the random-number seed.
 #' @param dat string. A data.frame containing columns for species name, x coordinates, y coordinates, spatialUncertainty, year and an identifier (used to group the data - heuristic will be calculated for each group). 
 #' @param species Character string. column name in dat giving species names.
 #' @param x string. Column name in dat giving x coordinates. Any coordinate and spatial reference systems are permitted.
@@ -14,7 +15,8 @@
 #' @param spatialUncertainty String. Column name in dat giving uncertainty associated with x and y. Any units are permitted. 
 #' @param identifier String. Column name in dat giving record "identifiers". Identifiers are used to group the data; heuristics will be calculated separately for each group.
 #' @param periods Numeric. A list of time periods. For example, for two periods, the first spanning 1950 to 1990, and the second 1991 to 2019: periods = list(1950:1990, 1991:2019).
-#' @param nSamps Logical. How many iterations of random samples to use for comparison of empirical NN index with random NN index.
+#' @param nSamps Positive integer giving the number of random samples used to
+#'   compare the empirical and random nearest-neighbour distances.
 #' @param mask String. A raster object used to indicate the study region over which the random distribution should be generated. In most cases this will be a single raster layer. However, where the identifier 
 #'             field is used to subset the data spatially (e.g. splitting it by country, continent, etc.) then mask should be a raster stack with n layers, where n is equal to the number of levels in the identifier field. 
 #'             mask may have fewer layers than the number of levels in identifier field when identifier refers to spatial subsets, but any rows in dat with an identifier for which there is no layer 
@@ -24,7 +26,9 @@
 #'        different \code{periods}.
 #' @param maxSpatUncertainty Numeric. Maximum permitted spatial uncertainty. All records more uncertain than this value will be dropped. Units must match the units in your data.
 #' @seealso \code{\link{assessSpatialCov}} which maps your data in geographical space.
-#' @return A list with two elements: a ggplot2 object and the data underpinning the plot.
+#' @return A list with \code{data}, a data frame containing mean, 5th-percentile,
+#'   and 95th-percentile nearest-neighbour indices by period and identifier; and
+#'   \code{plot}, a ggplot object.
 #' @export
 
 assessSpatialBias <- function(dat, 

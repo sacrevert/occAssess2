@@ -1,7 +1,10 @@
-#' \code{assessEnvBias}
+#' Plot occurrences in principal-component environmental space
 #'
-#' This function plots the distribution of your data in environmental space. To do this it uses a principal component analysis to reduce your environmental data to two dimensions for visualization.
-#' @param dat string. A data.frame containing columns for species name, x coordinates, y coordinates, spatialUncertainty, year and an identifier (used to group the data - heuristic will be calculated for each group). 
+#' Uses principal component analysis (PCA) to represent occurrence records in
+#' environmental space and plots selected component pairs by period and
+#' identifier.
+#' @param dat A data frame containing species, coordinate, year,
+#'   spatial-uncertainty, and identifier columns.
 #' @param species Character string. column name in dat giving species names.
 #' @param x string. Column name in dat giving x coordinates. Any coordinate and spatial reference systems are permitted.
 #' @param y string. Column name in dat giving y coordinates. Any coordinate and spatial reference systems are permitted.
@@ -9,12 +12,25 @@
 #' @param spatialUncertainty String. Column name in dat giving uncertainty associated with x and y. Any units are permitted. 
 #' @param identifier String. Column name in dat giving record "identifiers". Identifiers are used to group the data; heuristics will be calculated separately for each group.
 #' @param periods String. A list of time periods. For example, for two periods, the first spanning 1950 to 1990, and the second 1991 to 2019: periods = list(1950:1990, 1991:2019).
-#' @param envDat String. A dataframe with n columns and N rows where n are environmental variables and N are the values of those variables at the locations of x and y in the occurrence data. N must be the same length as the coordinates in dat.
-#' @param backgroundEnvDat String. As envDat but N do not correspond to the locations of the occurrence data; instead, they are a background sample of environmental space in the study region. N does not have to be the same length as the coordinates in dat. backgroundEnvDat defaults to NULL in which case the function is calculated only for the sampled environmental space. 
+#' @param envDat A data frame of numeric environmental variables with exactly
+#'   one row per row of \code{dat}, in the same order. Filtering is applied to
+#'   both objects so retained occurrence and environmental rows remain paired.
+#' @param backgroundEnvDat Optional data frame containing a background sample of
+#'   environmental space. Its column names and order must match \code{envDat};
+#'   its number of rows need not match \code{dat}.
 #' @param xPC Numeric. Which principal component to use as the x axis.
 #' @param yPC Numeric. As xPC but for the y axis. 
 #' @param maxSpatUncertainty Numeric. Maximum permitted spatial uncertainty. All records more uncertain than this value will be dropped. Units must match the units in your data.
-#' @return a list with two entries: 1) the PCA results with columns for period, identifier, scores.PC1,.. scores.PCn, xVar (proportion of variance explained by xPC) and yVar (as xVar but for yPC); and 2) the PCA plots.
+#' @details Records with missing years, records outside \code{periods}, and rows
+#'   with incomplete occurrence environmental data are omitted. If
+#'   \code{backgroundEnvDat} is supplied, one PCA is fitted to the background
+#'   data and occurrence rows are projected onto it. Otherwise, a separate PCA
+#'   is fitted to the retained occurrence environmental data for each identifier.
+#'   Background scores are repeated in the returned data for each identifier so
+#'   each plot facet has its own background reference.
+#' @return A list with \code{data}, a data frame containing period, identifier,
+#'   PCA scores, and percentages of variance explained by the selected axes; and
+#'   \code{plot}, a ggplot object.
 #' @export
 
 assessEnvBias <- function(dat,

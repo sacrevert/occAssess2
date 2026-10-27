@@ -1,7 +1,9 @@
-#' \code{assessSpeciesNumber}
+#' Count recorded species by period
 #'
-#' This function calculates the number of species recorded in each year.
-#' @param dat string. A data.frame containing columns for species name, x coordinates, y coordinates, spatialUncertainty, year and an identifier (used to group the data - heuristic will be calculated for each group). 
+#' Calculates the number of unique, non-missing species recorded in each
+#' user-defined period and identifier group.
+#' @param dat A data frame containing species, coordinate, year,
+#'   spatial-uncertainty, and identifier columns.
 #' @param species Character string. column name in dat giving species names.
 #' @param x string. Column name in dat giving x coordinates. Any coordinate and spatial reference systems are permitted.
 #' @param y string. Column name in dat giving y coordinates. Any coordinate and spatial reference systems are permitted.
@@ -12,7 +14,8 @@
 #' @param maxSpatUncertainty Numeric. Maximum permitted spatial uncertainty. All records more uncertain than this value will be dropped. Units must match the units in your data.
 #' @param normalize Logical. Whether or not to normalize the counts for each level of identifier. This is helpful where the number of records varies widely among levels of identifier.
 #' @seealso \code{\link{assessSpeciesID}} which gives the number or proportion of records identified to species level. 
-#' @return A list with two elements: a ggplot2 object and the data underpinning the plot.
+#' @return A list with \code{data}, a data frame containing \code{val},
+#'   \code{group}, and \code{Period}; and \code{plot}, a ggplot object.
 #' @export
 
 assessSpeciesNumber <- function(dat, 

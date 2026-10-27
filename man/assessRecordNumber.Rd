@@ -2,7 +2,7 @@
 % Please edit documentation in R/assessRecordNumber.R
 \name{assessRecordNumber}
 \alias{assessRecordNumber}
-\title{\code{assessRecordNumber}}
+\title{Count occurrence records by period}
 \usage{
 assessRecordNumber(
   dat,
@@ -18,7 +18,8 @@ assessRecordNumber(
 )
 }
 \arguments{
-\item{dat}{string. A data.frame containing columns for species name, x coordinates, y coordinates, spatialUncertainty, year and an identifier (used to group the data - heuristic will be calculated for each group).}
+\item{dat}{A data frame containing species, coordinate, year,
+spatial-uncertainty, and identifier columns.}
 
 \item{species}{Character string. column name in dat giving species names.}
 
@@ -39,10 +40,12 @@ assessRecordNumber(
 \item{normalize}{Logical. Whether or not to normalize the counts for each level of identifier. This is helpful where the number of records varies widely among levels of identifier.}
 }
 \value{
-A list with two elements: a ggplot2 object and the data underpinning the plot.
+A list with \code{data}, a data frame containing \code{val},
+\code{group}, and \code{Period}; and \code{plot}, a ggplot object.
 }
 \description{
-This function calculates the number of records in each year.
+Calculates the number of occurrence records in each user-defined period and
+identifier group.
 }
 \seealso{
 \code{\link{assessSpeciesNumber}} which gives the number of species recorded each period.

@@ -5,22 +5,22 @@
 \alias{backgroundEnvDat}
 \title{Background environmental data for the UK}
 \format{
-An object of class \code{"data.frame"}
+A numeric matrix with 4,000 rows and 19 environmental variables.
 }
 \source{
-\href{10.1002/joc.5086}{doi}
+WorldClim 2, \doi{10.1002/joc.5086}
 }
 \usage{
 data(backgroundEnvDat)
 }
 \description{
-Environmental data from worldclim layers (worldclim.org) at 4000 random points in the UK.
+Environmental data from WorldClim layers at 4,000 random points in the UK.
 }
 \examples{
 data(backgroundEnvDat)
 }
 \references{
 Fick and Hijmans. (2017) International Journal of Climatology.
-(\href{10.1002/joc.5086}{doi})
+\doi{10.1002/joc.5086}
 }
 \keyword{datasets}

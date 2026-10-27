@@ -2,7 +2,7 @@
 % Please edit documentation in R/assessBias1D.R
 \name{assessBias1D}
 \alias{assessBias1D}
-\title{\code{assessBias1D}}
+\title{Compare one-dimensional sample and population distributions}
 \usage{
 assessBias1D(pop, R, x, weights = NULL, breaks, RNames, WNames = NULL)
 }
@@ -19,13 +19,14 @@ superpopulation modelling, etc. (Boyd et al. 2023).}
 
 \item{breaks}{Numeric. \code{assessBias1D} calculates a relative frequency distribution of x in the sample and population, and breaks is the number of bins into which the distributions will be split.}
 
-\item{RNames}{String or character vector. Names of sample inclusion variables R. One name per element of R. Used for plots and other outputs.
-#' @param RNames String or character vector. Names of sample inclusion variables R. One name per element of R. Used for plots and other outputs.}
+\item{RNames}{Character vector naming the sample-inclusion variables in
+\code{R}. Supply one name per element of \code{R}.}
 
 \item{WNames}{String or character vector. Name of each set of weights. One name per set (this will often be 1). Used for plots and other outputs.}
 }
 \value{
-a list with two elements: 1) a plot of the relative frequency distributions and 2) the underlying data.
+A list with \code{plot}, a ggplot object showing relative-frequency
+distributions, and \code{data}, the underlying long-format data frame.
 }
 \description{
 This function compares the distribution of some variable in the sample to its distribution in the population (i.e. the whole geographic domain). If a set of weights are provided, it also compares the weighted

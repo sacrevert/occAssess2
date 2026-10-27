@@ -1,11 +1,17 @@
-#' \code{assessRepeatVisits}
+#' Summarise repeat visits within grid cells
 #'
 #' This function calculates the number of repeat visits across cells of a user-defined spatial resolution. Repeats are divided
 #' by the number of years in each user-defined period to give the average number of repeat samples per year on each grid cell.
 #'
-#' @param dat String. Data.frame with columns for lat, lon, and identifier (usually taxonomic group name).
-#' @param periods String. A list of time periods. For example, for two periods, the first spanning 1950 to 1990, and the second 1991 to 2019: periods = list(1950:1990, 1991:2019).
-#' @param spatRes Numeric. Spatial resolution at which to calculate repeat visits. Depends on CRS (use metres for eastings and northings, and decimals for lat lon).
+#' @param dat A data frame containing \code{lon}, \code{lat}, \code{year}, and
+#'   \code{identifier} columns.
+#' @param periods A list of vectors defining the years in each time period.
+#' @param spatRes Numeric grid resolution in longitude/latitude degrees.
+#' @details The current implementation constructs a fixed raster domain spanning
+#'   longitudes -120 to -30 and latitudes -60 to 30, and displays values from
+#'   zero to 20 visits per year. Data outside that domain are not represented.
+#' @return A list with \code{data}, a data frame of visits per year by grid cell,
+#'   period, and identifier; and \code{plot}, a ggplot frequency polygon.
 #' @export
 
 assessRepeatVisits <- function(dat, periods, spatRes) {
