@@ -17,7 +17,7 @@ The package comprises a number of discrete functions, each of which is designed 
 
 ## A worked example 
 
-In this document I demonstrate the utility of occAssess by applying it to data on flower-visiting taxa occurrences in South America over the period 1950 to 2019. The data were extracted from GBIF and can be accessed at https://doi.org/10.15468/dl.wqz6z3. 
+In this document we demonstrate the utility of occAssess by applying it to data on flower-visiting taxa occurrences in South America over the period 1950 to 2019. The data were extracted from GBIF and can be accessed at https://doi.org/10.15468/dl.wqz6z3. 
 
 ### Inputs
 
@@ -40,7 +40,7 @@ str(spDat)
 
 #### Periods
 
-In addition to your occurrence data, you must also provide a number of periods into which your data will be split (thi can be one period covering e.g. your whole study extent). In this example I will split the data into decades over the period 1950 to 2019. Periods are defined as follows:
+In addition to your occurrence data, you must also provide a number of periods into which your data will be split (thi can be one period covering e.g. your whole study extent). In this example we will split the data into decades over the period 1950 to 2019. Periods are defined as follows:
 
 
 ```r
@@ -49,11 +49,11 @@ periods <- list(1950:1959, 1960:1969, 1970:1979, 1980:1989, 1990:1999, 2000:2009
 
 ### Functions
 
-All of the functions in occAssess require two common arguments (in addition to the arguments that specify which column matches which field): dat and periods (outlined above). I will run through each function in the following, indicating where additional arguments are required. Generally, the functions in occAssess return a list with two elements: one being a ggplot2 object, with a separate panel or group for each level of identifier; and a second with the data underpinning the plot.
+All of the functions in occAssess require two common arguments (in addition to the arguments that specify which column matches which field): dat and periods (outlined above). we will run through each function in the following, indicating where additional arguments are required. Generally, the functions in occAssess return a list with two elements: one being a ggplot2 object, with a separate panel or group for each level of identifier; and a second with the data underpinning the plot.
 
 #### assessRecordNumber
 
-The first function I will introduce is the simplest: assessRecordNumber. This function simply plots out the number of records per year in your dataset. 
+The first function we will introduce is the simplest: assessRecordNumber. This function simply plots out the number of records per year in your dataset. 
 
 
 ```r
@@ -244,7 +244,7 @@ The argument nSamps indicates how many random distributions should be drawn, and
 
 #### assessEnvBias 
 
-Spatial bias in your dataset does not necessarily tell you anything about environmental bias. The function assessEnvBias assesses the degree to which your data are biased across time periods in environmental space. To do this we first need to get some climate data. I will use the standard suite of 19 bioclimatic variables from worldclim. It is possible to get this data through R using the raster package, but here I will use my local version for speed. The environmental data for assessEnvBias can be processed as follows:
+Spatial bias in your dataset does not necessarily tell you anything about environmental bias. The function assessEnvBias assesses the degree to which your data are biased across time periods in environmental space. To do this we first need to get some climate data. we will use the standard suite of 19 bioclimatic variables from worldclim. It is possible to get this data through R using the raster package, but here we will use my local version for speed. The environmental data for assessEnvBias can be processed as follows:
 
 
 ```r
