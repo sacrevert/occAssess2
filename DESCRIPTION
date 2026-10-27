@@ -1,7 +1,7 @@
 Package: occAssess
 Title: Screen Species Occurrence Data for Biases
 Version: 1.3.0
-Authors@R: 
+Authors@R: c(
     person(given = "Rob",
            family = "Boyd",
            role = c("aut", "cre"),
@@ -9,9 +9,10 @@ Authors@R:
            comment = c(ORCID = "0000-0002-7973-9865"))
     person(given = "Oliver",
            family = "Pescott",
-           role = c("aut"),
+           role = "aut",
            email = "olipes@ceh.ac.uk",
            comment = c(ORCID = "0000-0002-0685-8046"))
+)
 Description: Contains a number of discrete functions, each of which can be used to assess a particular form of bias, uncertainty or coverage. Generally, the user must pass
     their occurrence data to the functions along with a list of time periods into which the outputs will be split. The functions generally return a list with two elements: 
     a ggplot2 object, and the data that underpins that plot.
