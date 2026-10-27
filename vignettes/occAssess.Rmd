@@ -237,9 +237,11 @@ maps[[2]] + ggplot2::xlim(c(-90, -30)) # Syrphidae
 
 `res` uses the coordinate units of the occurrence data (for example, metres
 in a projected CRS or decimal degrees in longitude/latitude).
-`logCount = TRUE` applies a base-10 transformation for display, while
-`countries` adds boundaries from `ggplot2::map_data("world")` and is
-appropriate only for WGS84 longitude/latitude. Boundaries are optional.
+`logCount = TRUE` applies a base-10 transformation to density displays and
+returned density rasters; sampled-period and overlap calculations always use
+untransformed record presence. `countries` adds boundaries from
+`ggplot2::map_data("world")` and is appropriate only for WGS84
+longitude/latitude. Boundaries are optional.
 
 #### assessSpatialBias
 

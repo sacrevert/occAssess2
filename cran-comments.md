@@ -9,7 +9,7 @@ Results:
 
 - `R CMD build`: passed, including all three vignettes.
 - `R CMD check --as-cran`: 0 ERRORs, 0 WARNINGs, 1 NOTE.
-- Complete testthat suite: 101 expectations passed.
+- Complete testthat suite: 180 expectations passed.
 
 The remaining NOTE is:
 

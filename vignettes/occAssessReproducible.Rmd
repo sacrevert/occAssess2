@@ -206,8 +206,9 @@ map$survey2
 
 <code>res</code> is expressed in the units of the occurrence coordinates
 (decimal degrees here, or typically metres for a projected CRS).
-<code>logCount</code> applies a base-10 transformation for display. The
-<code>countries</code> borders come from
+<code>logCount</code> applies a base-10 transformation to density displays and
+returned density rasters, but not to sampled-period or overlap calculations.
+The <code>countries</code> borders come from
 <code>ggplot2::map_data("world")</code> and are appropriate only for WGS84
 longitude/latitude. For projected or custom study regions, supply a compatible
 spatial polygon object through <code>shp</code> instead.

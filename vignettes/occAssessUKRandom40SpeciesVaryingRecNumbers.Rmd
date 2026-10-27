@@ -240,7 +240,8 @@ map$survey2
 
 `res` uses the coordinate units of the occurrence data (metres for this
 projected example). `logCount = TRUE` applies a base-10 transformation for
-display. The `countries` option is appropriate only for WGS84
+the density display and returned density rasters; it does not change
+sampled-period or overlap calculations. The `countries` option is appropriate only for WGS84
 longitude/latitude; projected data require a compatible polygon through
 `shp`. Neither boundary option is required to calculate the gridded result.
 
