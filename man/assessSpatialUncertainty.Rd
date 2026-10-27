@@ -2,20 +2,41 @@
 % Please edit documentation in R/assessSpatialUncertainty.R
 \name{assessSpatialUncertainty}
 \alias{assessSpatialUncertainty}
-\title{\code{assessSpatialUncertainty}}
+\title{Assess reporting of spatial uncertainty}
 \usage{
 assessSpatialUncertainty(dat, periods)
 }
 \arguments{
-\item{dat}{string. A data.frame containing columns for species name (NA if not identified), an identifier (usually taxonomic group name),
-and spatial uncertainty.}
+\item{dat}{A data frame containing columns named \code{species}, \code{x}, \code{y}, \code{year},
+\code{spatialUncertainty}, and \code{identifier}. \code{identifier} must not contain missing
+values. Missing \code{spatialUncertainty} values indicate that uncertainty was not
+specified. The units of non-missing uncertainty values must be consistent,
+but may be chosen by the user.}
 
-\item{periods}{String. A list of time periods. For example, for two periods, the first spanning 1950 to 1990, and the second 1991 to 2019: periods = list(1950:1990, 1991:2019).}
+\item{periods}{A list of vectors defining the years in each time period. For
+example, \code{list(1950:1990, 1991:2019)} defines two periods.}
 }
 \value{
-A list with two elements if filter = FALSE and three elements if filter = TRUE. The elements are 1) data (summary of spatial uncertainty),
-2) a ggplot object and 3) the input data with the user-defined spatialUncertainty filter applied.
+A list with two elements: \code{data}, a one-column numeric matrix named
+\code{proportion_specified} with identifiers as row names and the supplied
+\code{periods} stored as an attribute; and \code{plot}, a ggplot object containing the
+period-grouped histograms and pooled annotations.
 }
 \description{
-This function calculates the proportion of records identified to species level in each year with data.
+Calculates, for each identifier, the proportion of retained records for which
+spatial uncertainty is specified and plots the distributions of the specified
+uncertainty values by period.
+}
+\details{
+Records with missing years are removed with a warning. Records whose
+years do not occur in \code{periods} are also excluded. For each identifier, the
+returned value is pooled across all selected periods and is calculated as the
+number of retained records with non-missing \code{spatialUncertainty} divided by
+the total number of retained records. Thus, records with missing uncertainty
+are included in the denominator but not the numerator.
+
+The histogram includes every non-missing spatial uncertainty value from the
+retained records and overlays the distributions for the selected periods. No
+fixed plotting range is applied. Its annotation is the pooled proportion, not
+a period-specific proportion.
 }
