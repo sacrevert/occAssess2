@@ -13,9 +13,19 @@ The package is not yet on CRAN. Install the current GitHub version with:
 
 ~~~r
 install.packages("remotes") # needed only if remotes is not already installed
-remotes::install_github("sacrevert/occAssess2")
+remotes::install_github(
+  "sacrevert/occAssess2",
+  dependencies = TRUE,
+  build_vignettes = TRUE
+)
 library(occAssess)
 ~~~
+
+The `build_vignettes = TRUE` option is required for
+`browseVignettes("occAssess")` after installation from GitHub because
+`remotes` does not build package vignettes by default. Building the vignettes
+also requires Pandoc; it is included with RStudio and can otherwise be
+[installed separately](https://pandoc.org/installing.html).
 
 ## Quick, reproducible example
 
