@@ -9,14 +9,14 @@ Results:
 
 - `R CMD build`: passed, including all three vignettes.
 - `R CMD check --as-cran`: 0 ERRORs, 0 WARNINGs, 1 NOTE.
-- Complete testthat suite: 59 expectations passed.
+- Complete testthat suite: 101 expectations passed.
 
 The remaining NOTE is:
 
 1. CRAN incoming feasibility reports this as a new submission.
 
-The most recent completed GitHub Actions run on `master` before this
-documentation update tested R release on Linux, Windows, and macOS plus R-devel
+The most recent completed GitHub Actions run on `master` before this change
+tested R release on Linux, Windows, and macOS plus R-devel
 and oldrel-1 on Linux; all five jobs passed:
 https://github.com/sacrevert/occAssess2/actions/runs/40499503103
 

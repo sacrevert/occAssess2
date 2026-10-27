@@ -115,8 +115,8 @@ Both functions return a list containing the numerical result in
   uncertainty and the pooled proportion of records for which it is specified.
 - <code>assessBias1D()</code>: comparison of sample and population distributions
   for one variable, optionally after weighting.
-- <code>assessRepeatVisits()</code>: repeat sampling in a fixed geographic
-  domain; see its help page for the current domain assumptions.
+- <code>assessRepeatVisits()</code>: occurrence-record counts per grid cell per
+  specified period-year, as a proxy for repeated spatial sampling.
 
 Most occurrence-data functions require columns representing species,
 coordinates, year, spatial uncertainty, and an identifier. Coordinate and
