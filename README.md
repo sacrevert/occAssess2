@@ -49,7 +49,7 @@ periods <- list(1950:1959, 1960:1969, 1970:1979, 1980:1989, 1990:1999, 2000:2009
 
 ### Functions
 
-All of the functions in occAssess require two common arguments (in addition to the arguments that specify which column matches which field): dat and periods (outlined above). we will run through each function in the following, indicating where additional arguments are required. Generally, the functions in occAssess return a list with two elements: one being a ggplot2 object, with a separate panel or group for each level of identifier; and a second with the data underpinning the plot.
+All of the functions in occAssess require two common arguments (in addition to the arguments that specify which column matches which field): dat and periods (outlined above). We will run through each function in the following, indicating where additional arguments are required. Generally, the functions in occAssess return a list with two elements: one being a ggplot2 object, with a separate panel or group for each level of identifier; and a second with the data underpinning the plot.
 
 #### assessRecordNumber
 
@@ -244,14 +244,14 @@ The argument nSamps indicates how many random distributions should be drawn, and
 
 #### assessEnvBias 
 
-Spatial bias in your dataset does not necessarily tell you anything about environmental bias. The function assessEnvBias assesses the degree to which your data are biased across time periods in environmental space. To do this we first need to get some climate data. we will use the standard suite of 19 bioclimatic variables from worldclim. It is possible to get this data through R using the raster package, but here we will use my local version for speed. The environmental data for assessEnvBias can be processed as follows:
+Spatial bias in your dataset does not necessarily tell you anything about environmental bias. The function assessEnvBias assesses the degree to which your data are biased across time periods in environmental space. To do this we first need to get some climate data. We will use the standard suite of 19 bioclimatic variables from worldclim. It is possible to get this data through R using the raster package, but here we will use a local version for speed. The environmental data for assessEnvBias can be processed as follows:
 
 
 ```r
 ## How to get the data using raster::getData()
 #clim <- raster::getData("worldclim",var="bio",res=10)
 clim <- raster::stack(list.files("C:/Users/Rob.Lenovo-PC/Documents/surpass/Data/bio/bio/",
-                           full.names = T)) # my local version (19 raster layers)
+                           full.names = T)) # local version (19 raster layers)
 # delineate south america in the climate data 
 shp <- raster::shapefile("C:/Users/Rob.Lenovo-PC/Documents/surpass/Data/South America country boundaries/South America country boundaries/data/commondata/data0/southamerica_adm0.shp")
 #> Warning in OGRSpatialRef(dsn, layer, morphFromESRI = morphFromESRI, dumpSRS = dumpSRS, : Discarded ellps WGS 84 in Proj4
