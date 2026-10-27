@@ -47,7 +47,11 @@ assessEnvBias <- function(dat,
   
   if (xPC > ncol(envDat) | yPC > ncol(envDat)) stop("You have chosen a principal component that doesn't exist for one of the x or y axes")
   
-  if (!is.null(maxSpatUncertainty)) dat <- dat[!is.na(dat$spatialUncertainty) & dat$spatialUncertainty <= maxSpatUncertainty, ]
+  if (!is.null(maxSpatUncertainty)) {
+    keep <- !is.na(dat$spatialUncertainty) & dat$spatialUncertainty <= maxSpatUncertainty
+    dat <- dat[keep, , drop = FALSE]
+    envDat <- envDat[keep, , drop = FALSE]
+  }
   
   if (nrow(dat) == 0) stop("No records with with spatialUncertainty < maxSpatUncertainty")
   
@@ -65,7 +69,8 @@ assessEnvBias <- function(dat,
     
   }
   
-  if (any(is.na(dat[, envCols[1]]))) dat <- dat[-which(is.na(dat[, envCols[1]])), ]
+  completeEnv <- stats::complete.cases(dat[, envCols, drop = FALSE])
+  if (any(!completeEnv)) dat <- dat[completeEnv, , drop = FALSE]
   
   dat <- dat[order(dat$year), ]
   
