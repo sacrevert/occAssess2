@@ -2,28 +2,66 @@
 % Please edit documentation in R/assessRepeatVisits.R
 \name{assessRepeatVisits}
 \alias{assessRepeatVisits}
-\title{Summarise repeat visits within grid cells}
+\title{Summarise occurrence-record counts within grid cells}
 \usage{
 assessRepeatVisits(dat, periods, spatRes)
 }
 \arguments{
-\item{dat}{A data frame containing \code{lon}, \code{lat}, \code{year}, and
-\code{identifier} columns.}
+\item{dat}{A data frame containing numeric \code{lon}, \code{lat}, and
+\code{year} columns and an \code{identifier} column. Coordinates may be
+longitude/latitude or projected coordinates, but both coordinate columns
+and \code{spatRes} must use the same coordinate system and units.}
 
-\item{periods}{A list of vectors defining the years in each time period.}
+\item{periods}{A non-empty list of non-empty, non-overlapping numeric vectors
+defining the years in each period. Duplicate years, within or between
+periods, are not permitted. The number of entries in each vector is the
+denominator for that period.}
 
-\item{spatRes}{Numeric grid resolution in longitude/latitude degrees.}
+\item{spatRes}{A single positive, finite number giving the grid-cell width and
+height in the units of \code{lon} and \code{lat}.}
 }
 \value{
-A list with \code{data}, a data frame of visits per year by grid cell,
-period, and identifier; and \code{plot}, a ggplot frequency polygon.
+A list with \code{data} and \code{plot}. \code{data} is a data frame
+with columns \code{vals}, \code{identifier}, and \code{Period}. It contains
+one row for every grid-cell, identifier, and period combination;
+\code{vals} contains occurrence records per grid cell per specified
+period-year and is missing for unoccupied cells. \code{plot} is a ggplot
+frequency polygon of non-missing \code{vals}, coloured by period and
+faceted by identifier.
 }
 \description{
-This function calculates the number of repeat visits across cells of a user-defined spatial resolution. Repeats are divided
-by the number of years in each user-defined period to give the average number of repeat samples per year on each grid cell.
+Counts occurrence records in grid cells and divides each count by the number
+of years specified in its period. Despite the historical function name, the
+result is not a count of independent visits: no visit identifier is supplied
+and coincident records are not deduplicated.
 }
 \details{
-The current implementation constructs a fixed raster domain spanning
-longitudes -120 to -30 and latitudes -60 to 30, and displays values from
-zero to 20 visits per year. Data outside that domain are not represented.
+For a grid cell, identifier, and period, the returned value is
+
+\code{number of occurrence rows / length(periods[[period]])}.
+
+It is therefore occurrence records per grid cell per specified period-year.
+It can be used as a proxy for repeated spatial sampling, but it does not
+identify independent recording visits. In particular, the denominator is
+not the number of years in which a cell was actually sampled.
+
+A single rectangular grid spanning the retained coordinates is constructed
+for all periods and identifiers. Cell boundaries are multiples of
+\code{spatRes} relative to coordinate zero; a coordinate exactly on a
+boundary is assigned to the cell beginning at that boundary. This makes
+every cell exactly \code{spatRes} units wide and high and makes grid
+alignment independent of row order, period, and identifier. Only records
+in the requested periods determine the grid.
+
+Records with missing or non-finite years or coordinates are removed with a
+warning. Records outside all requested periods are excluded. Missing
+identifiers are not permitted. A defined period with no observations is
+retained in \code{data} with missing values for every grid cell. Unoccupied
+cells are likewise represented by \code{NA_real_}; the frequency polygon
+displays the distribution across occupied cells only. Values are not
+truncated in the returned data or plot.
+
+To prevent accidental excessive allocation, an error is raised when the
+grid or the expanded period-by-identifier output would exceed ten million
+rows; increase \code{spatRes} in that case.
 }
