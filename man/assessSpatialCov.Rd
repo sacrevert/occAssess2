@@ -2,7 +2,7 @@
 % Please edit documentation in R/assessSpatialCov.R
 \name{assessSpatialCov}
 \alias{assessSpatialCov}
-\title{\code{assessSpatialCov}}
+\title{Map gridded spatial coverage}
 \usage{
 assessSpatialCov(
   dat,
@@ -49,7 +49,7 @@ be left unspecified, but in this case no country borders will be presented on th
 
 \item{shp}{String. If you are not working on WGS84, then you can provide a shapefile (spatialPolygons or spatialPolygonsDataFrame) with the country borders on the relevant crs for plotting. As with countries,
 if the levels in identifier denote spatial subsets of the data, then shp may be provided as a list, with the name of each element corresponding to one level of the identifier field in dat.
-Do not specify both countries and dat.}
+Do not specify both countries and shp.}
 
 \item{periods}{String. A list of time periods. For example, for two periods, the first spanning 1950 to 1990, and the second 1991 to 2019: periods = list(1950:1990, 1991:2019).}
 
@@ -65,11 +65,15 @@ only applies if \code{output} = "overlap".}
 \item{returnRaster}{Logical. Whether or not to return rasters underpinning maps. This might be useful if you want to manipulate them in some way (e.g. convert the number of periods sampled to the proportion of periods samples, etc.).}
 }
 \value{
-By default alist with n ggplot2 objects where n is the number of levels in the identifier field of dat. Where \code{output} = density return one map per level of identifier.
+By default, a named list of ggplot objects, one per identifier;
+density plots are faceted by period. If \code{returnRaster = TRUE}, returns
+a list with \code{plots} (that named plot list) and \code{rasters} (a
+RasterStack containing the corresponding raster results).
 }
 \description{
 This function grids and then maps species occurrence data.
 }
 \seealso{
-\code{\link{assessSpatialBias}} which gives a measure of how far your data eviates from a random distribution in space.
+\code{\link{assessSpatialBias}} which measures deviation from a
+random spatial distribution.
 }

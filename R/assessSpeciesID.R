@@ -1,7 +1,9 @@
-#' \code{assessSpeciesID}
+#' Summarise records identified to species level
 #'
-#' This function calculates the proportion (or counts) of records identified to species level over time..
-#' @param dat string. A data.frame containing columns for species name, x coordinates, y coordinates, spatialUncertainty, year and an identifier (used to group the data - heuristic will be calculated for each group). 
+#' Calculates the proportion or count of records with a non-missing species
+#' value in each period and identifier group.
+#' @param dat A data frame containing species, coordinate, year,
+#'   spatial-uncertainty, and identifier columns.
 #' @param species Character string. column name in dat giving species names.
 #' @param x string. Column name in dat giving x coordinates. Any coordinate and spatial reference systems are permitted.
 #' @param y string. Column name in dat giving y coordinates. Any coordinate and spatial reference systems are permitted.
@@ -9,9 +11,11 @@
 #' @param spatialUncertainty String. Column name in dat giving uncertainty associated with x and y. Any units are permitted. 
 #' @param identifier String. Column name in dat giving record "identifiers". Identifiers are used to group the data; heuristics will be calculated separately for each group.
 #' @param periods String. A list of time periods. For example, for two periods, the first spanning 1950 to 1990, and the second 1991 to 2019: periods = list(1950:1990, 1991:2019).
-#' @param type String. "proportion" or "count".
+#' @param type Character string: \code{"proportion"} or \code{"count"}.
 #' @param maxSpatUncertainty Numeric. Maximum permitted spatial uncertainty. All records more uncertain than this value will be dropped. Units must match the units in your data.
-#' @return A list with two elements: a ggplot2 object and the data underpinning the plot.
+#' @return A list with \code{data}, a data frame containing \code{prop},
+#'   \code{group}, and \code{Period}; and \code{plot}, a ggplot object. The
+#'   \code{prop} column contains proportions or counts according to \code{type}.
 #' @export
 
 assessSpeciesID <- function(dat, 

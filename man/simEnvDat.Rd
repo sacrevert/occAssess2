@@ -5,22 +5,23 @@
 \alias{simEnvDat}
 \title{Environmental data at the locations of the simulated data simDat.}
 \format{
-An object of class \code{"data.frame"}
+A numeric matrix with 10,769 rows and 19 environmental variables.
 }
 \source{
-\href{10.1002/joc.5086}{doi}
+WorldClim 2, \doi{10.1002/joc.5086}
 }
 \usage{
 data(simEnvDat)
 }
 \description{
-Environmental data from worldclim layers (worldclim.org) at the locations of the simulated data simDat.
+Environmental data from WorldClim layers at the locations in \code{simDat}.
+Rows correspond one-for-one and in the same order as \code{simDat}.
 }
 \examples{
 data(simEnvDat)
 }
 \references{
 Fick and Hijmans. (2017) International Journal of Climatology.
-(\href{10.1002/joc.5086}{doi})
+\doi{10.1002/joc.5086}
 }
 \keyword{datasets}

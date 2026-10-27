@@ -1,29 +1,36 @@
 ---
-title: "Worked example 2: What does a near-random dataset look like?"
-output: 
-html_document:
-keep_md: yes
+title: "Historical random-UK case study"
+output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{occAssessUKRandom40SpeciesVaryingRecNumbers}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-
-
+> **Historical, static example.** The occurrence table and environmental tables
+> used below are bundled with `occAssess`, and most code can be copied into an
+> R session after loading the package. The original mapping sections are kept
+> for scientific context but are not directly reproducible: they used the
+> private `BRCmap` package and an external raster mask that are not distributed
+> here. Pre-rendered figures are retained, and no code in this vignette is
+> executed during package checks. See the fully reproducible vignette for an
+> end-to-end executable workflow.
 
 ```r
-if (!"occAssess" %in% installed.packages()) devtools::install_github("https://github.com/robboyd/occAssess")
 library(occAssess)
 ```
 
 ### Introduction
 
-This vignette provides a worked example for the functionality of occAssess. For a full tutorial see the main vignette supplied in Boyd et al. (2021). 
+This vignette preserves a worked example based on simulated, approximately
+random UK occurrences.
 
 ### Occurrence data 
 
-In this worked example, I simulated data that approximates random distributions in space and time for fourty species. The species were simulated with varying prevalence (number of records varies by a factor of 5 with a mean of ~1000). The data were generated at random locations in the UK, and uniformly over the period 2001 to 2010. Each simulated data point was randomly assigned to one of two surveys which are specified in the "identifier" field. The data can be accessed within occAssess as follows:
+The dataset approximates random distributions in space and time for forty
+species. Record prevalence varies among species, locations are in the UK on a
+projected coordinate system, years span 2001 to 2010, and records are assigned
+to two simulated surveys in the `identifier` field.
 
 
 ```r
@@ -58,7 +65,7 @@ All of the functions in occAssess require two common arguments: dat and periods 
 
 #### assessRecordNumber
 
-The first function I will introduce is the simplest: assessRecordNumber. This function simply plots out the number of records per year in your dataset. 
+`assessRecordNumber()` counts records per period and identifier.
 
 
 ```r
@@ -114,7 +121,8 @@ nSpec$plot
 
 #### assessSpeciesID 
 
-It has been speculated that apparent changes in taxonomic coverage could, in fact, reflect a change in taxonomic expertise over time. For example, if fewer individuals have the skill to identify certain species, then it may not appear in your dataset in the later periods. The function assessSpeciesID treats the proportion of species identified to species level as a proxy for taxonomic expertise: 
+`assessSpeciesID()` reports the count or proportion of records whose species
+field is non-missing:
 
 
 ```r
@@ -144,7 +152,10 @@ The argument "type" can take the values proportion (proportion of records identi
 
 #### assessRarityBias
 
-A number of studies have defined taxonomic bias in a dataset as the degree of proportionality between species' range sizes (usually proxied by the number of grid cells on which it has been recorded) and the total number of records. One can regress the number of records on range size, and the residuals give an index of how over-or undersampled a species is given its prevalence. The function assessRarityBias conducts these analyses for each time period, and uses the r2 value from the linear regressions as an index proportionality between range sizes and number of records. Prevalence may be calculated for each time period if prevPerPeriod = FALSE, and over the whole extent f the data otherwise. Higher values indicate that species' are sampled in proportion to their range sizes whereas lower values indicate that some species are over- or undersampled. 
+`assessRarityBias()` measures association between recorded range size
+(occupied grid cells) and record count. With `metric = "r2"`, it returns the
+coefficient of determination from each regression. In this example,
+`prevPerPeriod = TRUE` calculates occupied cells separately for every period.
 
 
 ```r
@@ -171,20 +182,25 @@ taxBias$plot + ggplot2::ylim(c(0,1))
 
 ![plot of chunk out6](images/out6-1.png)
 
-Note the warning message which tells us that there are low numbers of species in some periods (not surprising as the data only contain five species). This represents a small sample size for the regression of range size on number of records so the results should be viewed with caution. 
+The simulated data contain forty species, so all identifier-period combinations
+meet the function's minimum of five species for fitting the association.
 
 #### assessSpatialCov 
 
-The function assessSpatialCov grids your data at a specified spatial resolution then maps it in geographic space. In this example, I provide a shapefile with the boundaries of the UK. If I was working on the WGS84 coordinate reference system (here I am using OSGB 36) this would not be necessary; I could instead use the countries argument and simply specify "UK". The function returns a list with n elements where n is the number of levels in the identifier field. Each element contains N maps where N is the number of time periods: 
+The original `assessSpatialCov()` example used an OSGB 36 boundary from the
+private `BRCmap` package. That dependency is unavailable, so the following
+code is retained only to show the historical setup. To rerun it, provide an
+equivalent spatial polygon in the same CRS as `spDat`.
 
 
 ```r
 
-library(BRCmap) ## a colleague's package that is not publically available. Users will have to provide their own shapefile
+# Historical dependency, not publicly available:
+# library(BRCmap)
+# data(UK)
+# shp <- UK[UK$REGION == "Great Britain", ]
 
-data(UK)
-
-shp <- UK[UK$REGION == "Great Britain", ]
+shp <- <user-supplied-OSGB36-boundary>
 
 head(shp)
 #> class       : SpatialPolygonsDataFrame 
@@ -222,7 +238,11 @@ map$survey2
 
 ![plot of chunk out7](images/out7-2.png)
 
-As you can see there are three new arguments to be specified. res is the spatial resolution at which you would like to map the data (units depend on you coordinate reference system, e.g. m if easting and northing, and decimal degress in lon/ lat); logCount indicates whether or not you would like to log10 transform the counts for visual purposes; countries defines the countries covered by your data; and shp is  shapefile delimiting your study area if countries are NULL. The countries argument is the simplest way to specify your study boundaries if you are working at country or international level and on the WGS84 lat/ lon coordinate reference system. If you are not working on WGS84, or at a country/ international level, then you will need to provide a shapefile to shp delimiting your boundaries for plotting.
+`res` uses the coordinate units of the occurrence data (metres for this
+projected example). `logCount = TRUE` applies a base-10 transformation for
+display. The `countries` option is appropriate only for WGS84
+longitude/latitude; projected data require a compatible polygon through
+`shp`. Neither boundary option is required to calculate the gridded result.
 
 
 #### assessSpatialBias
@@ -232,7 +252,7 @@ Even if your data has good spatial coverage, it may be biased; that is to say, i
 
 ```r
 
-mask <- raster::raster("C:/Users/Rob.Lenovo-PC/Documents/surpass/Data/Mammals.asc")
+mask <- raster::raster("<path-to-compatible-UK-mask.asc>")
 
 mask
 #> class      : RasterLayer 
@@ -258,7 +278,6 @@ spatBias <- assessSpatialBias(dat = spDat,
                               year = "year", 
                               spatialUncertainty = "spatialUncertainty",
                               identifier = "identifier")
-#> Warning: `guides(<scale> = FALSE)` is deprecated. Please use `guides(<scale> = "none")` instead.
 
 str(spatBias$data)
 #> 'data.frame':	10 obs. of  5 variables:
@@ -277,7 +296,10 @@ The argument nSamps indicates how many random distributions should be drawn, and
 
 #### assessEnvBias 
 
-Spatial bias in your dataset does not necessarily tell you anything about environmental bias. The function assessEnvBias assess the degree to which your data are biased across time periods in environmental space. To do this we first need to get some climate data. I will use the standard suite of 19 bioclimatic variables from worldclim. It is possible to get this data through R using the raster package or online at https://www.worldclim.org/. For this example I have extracted the worldclim climate data at the locations of the simulated occurrence data. I have also extracted the climate data at 4000 random locations in the UK as "background" data which I will treat as background climate space. These data can be obtained from within occAssess as follows:
+The bundled environmental rows correspond one-for-one, in the same order, with
+`random40Species`. The bundled background table uses the same WorldClim
+variables at 4,000 UK background locations. Current source data are available
+from [WorldClim](https://www.worldclim.org/).
 
 
 ```r
@@ -286,11 +308,8 @@ data("random40SpeciesEnvDat") # climate data at locations of simulated occurrenc
 
 data("backgroundEnvDat") # climate data at 4000 random locations
 
-## How to get the data using raster::getData()
-
-#clim <- raster::getData("worldclim",var="bio",res=10)
-
-# this will need to be reprojected to the same crs as your data using e.g. raster::projectRaster and then you will need to extract the climate data at the locations of your occurrence data using raster::extract()
+# For other data, project environmental rasters to the occurrence CRS before
+# extracting values in exactly the occurrence-row order.
 ```
 assessEnvBias conducts a principal component analysis on your environmental data, then maps your occurrence data in environmental space:
 

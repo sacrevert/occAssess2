@@ -1,7 +1,9 @@
-#' \code{assessRecordNumber}
+#' Count occurrence records by period
 #'
-#' This function calculates the number of records in each year.
-#' @param dat string. A data.frame containing columns for species name, x coordinates, y coordinates, spatialUncertainty, year and an identifier (used to group the data - heuristic will be calculated for each group). 
+#' Calculates the number of occurrence records in each user-defined period and
+#' identifier group.
+#' @param dat A data frame containing species, coordinate, year,
+#'   spatial-uncertainty, and identifier columns.
 #' @param species Character string. column name in dat giving species names.
 #' @param x string. Column name in dat giving x coordinates. Any coordinate and spatial reference systems are permitted.
 #' @param y string. Column name in dat giving y coordinates. Any coordinate and spatial reference systems are permitted.
@@ -11,7 +13,8 @@
 #' @param periods String. A list of time periods. For example, for two periods, the first spanning 1950 to 1990, and the second 1991 to 2019: periods = list(1950:1990, 1991:2019).
 #' @param maxSpatUncertainty Numeric. Maximum permitted spatial uncertainty. All records more uncertain than this value will be dropped. Units must match the units in your data.
 #' @param normalize Logical. Whether or not to normalize the counts for each level of identifier. This is helpful where the number of records varies widely among levels of identifier.
-#' @return A list with two elements: a ggplot2 object and the data underpinning the plot.
+#' @return A list with \code{data}, a data frame containing \code{val},
+#'   \code{group}, and \code{Period}; and \code{plot}, a ggplot object.
 #' @seealso \code{\link{assessSpeciesNumber}} which gives the number of species recorded each period. 
 #' @export
 

@@ -1,19 +1,19 @@
 #' Background environmental data for the UK
 #'
-#' Environmental data from worldclim layers (worldclim.org) at 4000 random points in the UK.
+#' Environmental data from WorldClim layers at 4,000 random points in the UK.
 #'
 #' @docType data
 #'
 #' @usage data(backgroundEnvDat)
 #'
-#' @format An object of class \code{"data.frame"}
+#' @format A numeric matrix with 4,000 rows and 19 environmental variables.
 #'
 #' @keywords datasets
 #'
 #' @references Fick and Hijmans. (2017) International Journal of Climatology.
-#' (\href{10.1002/joc.5086}{doi})
+#' \doi{10.1002/joc.5086}
 #'
-#' @source \href{10.1002/joc.5086}{doi}
+#' @source WorldClim 2, \doi{10.1002/joc.5086}
 #'
 #' @examples
 #' data(backgroundEnvDat)

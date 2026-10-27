@@ -1,22 +1,24 @@
 ---
-title: "occAssess"
-output: 
-html_vignette:
+title: "Historical South American case study"
+output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{occAssess}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-
-
+> **Historical, static example.** This case study preserves the original
+> South American analysis and its pre-rendered figures. Its code is not executed
+> when the vignette is built because the cleaned occurrence table, mask, country
+> boundary, and environmental rasters are not distributed with the package. The
+> occurrence download is available from
+> [GBIF](https://doi.org/10.15468/dl.wqz6z3); the environmental source is
+> [WorldClim](https://www.worldclim.org/). Paths below are placeholders that
+> users must replace with their own compatible files.
 
 ```r
-if (!"occAssess" %in% installed.packages()) devtools::install_github("https://github.com/robboyd/occAssess")
 library(occAssess)
 ```
-
-# Introduction
 
 # What does occAssess do? 
 
@@ -24,7 +26,10 @@ occAssess enables quick and easy screening of species occurrence data for common
 
 ## How does it work? 
 
-The package comprises a number of discrete functions, each of which is designed to assess a common form of bias. Generally speaking, users must pass three bits of information to the functions: 1) their occurrence data to the functions; 2) and list of time periods into which the resulting metrics will be split; and 3) the names of the columns in their data that correspond to the required fields in occAssess. Ouputs are generally provided in list format, with one element containing a ggplot2 object, and a second containing the data that underpins that plot.
+The package comprises discrete functions for different aspects of occurrence
+data quality. Most functions use an occurrence table, a list of periods, and
+column names identifying required fields. Return structures vary by function;
+the current help pages document their named components.
 
 ## A worked example 
 
@@ -34,12 +39,16 @@ In this document I demonstrate the utility of occAssess by applying it to data o
 
 #### Occurrence data
 
-occAssess requires a data.frame with the following fields: species (species name), x (x coordinae of record), y (y coordinate), year, spatialUncertainty (how much uncertainty is associated with the x and y coordinates; units do not matter but must be consistent) and identifier. The identifier is used to split the data into groups; for example, it could represent taxonomic groups or specific datasets. Where you have no information for a field, its value should be set to NA. The column names in your data need not match the fields needed for occAssess; instead, you must specify which columns corresponds to which of the required fields. This enables compatability with data standards such as Darwin core. 
+The occurrence functions generally require fields for species name, x and y
+coordinates, year, spatial uncertainty, and an identifier used to split records
+into groups. Column names may differ when the function accepts column-name
+arguments. Coordinate, uncertainty, mask, and resolution units must be mutually
+consistent.
 
 
 ```r
 
-spDat <- read.csv("C:/Users/Rob.Lenovo-PC/Documents/surpass/Data/GBIF/07.04.21/cleanedData.csv")
+spDat <- read.csv("<path-to-downloaded-and-cleaned-GBIF-data.csv>")
 
 str(spDat)
 #> 'data.frame':	82710 obs. of  6 variables:
@@ -67,7 +76,8 @@ All of the functions in occAssess require two common arguments (in addition to t
 
 #### assessRecordNumber
 
-The first function I will introduce is the simplest: assessRecordNumber. This function simply plots out the number of records per year in your dataset. 
+The first function is `assessRecordNumber()`, which counts records per period
+and identifier.
 
 
 ```r
@@ -125,7 +135,9 @@ nSpec$plot
 
 #### assessSpeciesID 
 
-It has been speculated that apparent changes in taxonomic coverage could, in fact, reflect a change in taxonomic expertise over time. For example, if fewer individuals have the skill to identify certain species, then it may not appear in your dataset in the later periods. The function assessSpeciesID treats the proportion of species identified to species level as a proxy for taxonomic expertise: 
+It has been speculated that apparent changes in taxonomic coverage could reflect
+changes in taxonomic expertise. `assessSpeciesID()` reports the count or
+proportion of records whose species field is non-missing:
 
 
 ```r
@@ -155,7 +167,11 @@ The argument "type" can take the values proportion (proportion of records identi
 
 #### assessRarityBias
 
-A number of studies have defined taxonomic bias in a dataset as the degree of proportionality between species' range sizes (usually proxied by the number of grid cells on which it has been recorded) and the total number of records. One can regress the number of records on range size, and the residuals give an index of how over-or undersampled a species is given its prevalence. The function assessSpeciesBias conducts these analyses for each time period, and uses the r2 value from the linear regressions as an index proportionality between range sizes and number of records. Higher values indicate that species' are sampled in proportion to their range sizes whereas lower values indicate that some species are over- or undersampled. 
+`assessRarityBias()` measures association between recorded range size (occupied
+grid cells) and record count. With `metric = "r2"`, it returns the coefficient
+of determination from a period-specific regression; `metric = "cor"` returns
+Pearson correlation. Here `prevPerPeriod = FALSE` calculates occupied cells
+for each species across all selected periods.
 
 
 ```r
@@ -219,16 +235,24 @@ maps[[2]] + ggplot2::xlim(c(-90, -30)) # Syrphidae
 
 ![plot of chunk unnamed-chunk-8](images/unnamed-chunk-8-2.png)
 
-As you can see there are three new arguments to be specified. res is the spatial resolution at which you would like to map the data (units depend on you coordinate reference system, e.g. m if easting and northing, and decimal degress in lon/ lat); logCount indicates whether or not you would like to log10 transform the counts for visual purposes; and countries defines the countries covered by your data. Countries must be specified in order to plot their boundaries.
+`res` uses the coordinate units of the occurrence data (for example, metres
+in a projected CRS or decimal degrees in longitude/latitude).
+`logCount = TRUE` applies a base-10 transformation for display, while
+`countries` adds boundaries from `ggplot2::map_data("world")` and is
+appropriate only for WGS84 longitude/latitude. Boundaries are optional.
 
 #### assessSpatialBias
 
-Even if your data has good spatial coverage, it may be biased; that is to say, it may deviate from a random distribution in space. The function assessSpatialBias provides an index of how far your data deviates from a random distribution. To do this is simulates an equal number of points to your data randomly across your study region. Then, for each time period, it calculates the average nearest neighbour distance across your data points and divides it by the average nearest neighbour distance from the random sample. If the index is lower than one then your data is more clustered than the random sample, and if it is above one it is more dispersed. To delineate your study area, you must provide a mask layer. The mask is a raster object which is has numeric values within your study area, and is NA outside of your study area. Here, I'll use some climate data from South America as a mask layer:
+`assessSpatialBias()` compares the empirical mean nearest-neighbour distance
+with random samples drawn within a raster mask. Values below one indicate
+greater clustering than the random samples; values above one indicate greater
+dispersion. The mask must share the occurrence coordinates' CRS and be numeric
+inside the sampling domain and `NA` outside it.
 
 
 ```r
 
-mask <- raster::raster("C:/Users/Rob.Lenovo-PC/Documents/surpass/Data/occAssessData/climSA.asc")
+mask <- raster::raster("<path-to-South-America-mask.asc>")
 
 mask
 #> class      : RasterLayer 
@@ -262,7 +286,6 @@ spatBias <- assessSpatialBias(dat = spDat,
 #> Warning in FUN(X[[i]], ...): Fewer than 100 records in period 3 for Syrphidae . View this result with caution.
 #> Warning in FUN(X[[i]], ...): Fewer than 100 records in period 4 for Syrphidae . View this result with caution.
 #> Warning in FUN(X[[i]], ...): Fewer than 100 records in period 5 for Syrphidae . View this result with caution.
-#> Warning: `guides(<scale> = FALSE)` is deprecated. Please use `guides(<scale> = "none")` instead.
 
 str(spatBias$data)
 #> 'data.frame':	14 obs. of  5 variables:
@@ -281,20 +304,20 @@ The argument nSamps indicates how many random distributions should be drawn, and
 
 #### assessEnvBias 
 
-Spatial bias in your dataset does not necessarily tell you anything about environmental bias. The function assessEnvBias assesses the degree to which your data are biased across time periods in environmental space. To do this we first need to get some climate data. I will use the standard suite of 19 bioclimatic variables from worldclim. It is possible to get this data through R using the raster package, but here I will use my local version for speed. The environmental data for assessEnvBias can be processed as follows:
+Spatial bias does not necessarily imply environmental bias.
+`assessEnvBias()` uses PCA to display retained occurrence records in
+environmental space. `envDat` must have one row per occurrence, in the same
+order, and background data must use the same environmental columns. The
+historical example used WorldClim bioclimatic layers:
 
 
 ```r
-## How to get the data using raster::getData()
-
-#clim <- raster::getData("worldclim",var="bio",res=10)
-
-clim <- raster::stack(list.files("C:/Users/Rob.Lenovo-PC/Documents/surpass/Data/bio/bio/",
+clim <- raster::stack(list.files("<path-to-WorldClim-bioclim-layers>",
                            full.names = T)) # my local version (19 raster layers)
 
 # delineate south america in the climate data 
 
-shp <- raster::shapefile("C:/Users/Rob.Lenovo-PC/Documents/surpass/Data/South America country boundaries/South America country boundaries/data/commondata/data0/southamerica_adm0.shp")
+shp <- raster::shapefile("<path-to-South-America-boundary.shp>")
 #> Warning in OGRSpatialRef(dsn, layer, morphFromESRI = morphFromESRI, dumpSRS = dumpSRS, : Discarded ellps WGS 84 in Proj4
 #> definition: +proj=merc +a=6378137 +b=6378137 +lat_ts=0 +lon_0=0 +x_0=0 +y_0=0 +k=1 +units=m +nadgrids=@null +wktext
 #> +no_defs
