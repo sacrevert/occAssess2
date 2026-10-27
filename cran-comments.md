@@ -29,9 +29,3 @@ with R 4.6.1: 0 ERRORs, 0 WARNINGs, and 2 NOTEs. The only package issue in
 either NOTE is the invalid ORCID placeholder described below; the incoming
 check also reports the expected "New submission" status. The complete
 testthat suite still passes (17 expectations).
-
-## Metadata requiring maintainer action
-
-`Authors@R` contains `YOUR-ORCID-ID`. It has deliberately not been invented,
-removed, or replaced. The maintainer must supply the correct ORCID or explicitly
-decide that the ORCID field should be omitted before submission.
