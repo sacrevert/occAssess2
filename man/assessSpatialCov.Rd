@@ -24,56 +24,103 @@ assessSpatialCov(
 )
 }
 \arguments{
-\item{dat}{string. A data.frame containing columns for species name, x coordinates, y coordinates, spatialUncertainty, year and an identifier (used to group the data - heuristic will be calculated for each group).}
+\item{dat}{A data frame containing species, coordinate, year,
+spatial-uncertainty, and identifier columns.}
 
-\item{species}{Character string. column name in dat giving species names.}
+\item{species}{Character string naming the species column in dat.}
 
-\item{x}{string. Column name in dat giving x coordinates. Any coordinate and spatial reference systems are permitted.}
+\item{x}{Character string naming the x-coordinate column in dat.}
 
-\item{y}{string. Column name in dat giving y coordinates. Any coordinate and spatial reference systems are permitted.}
+\item{y}{Character string naming the y-coordinate column in dat.}
 
-\item{year}{string. Column name in dat giving years.}
+\item{year}{Character string naming the numeric year column in dat.}
 
-\item{spatialUncertainty}{String. Column name in dat giving uncertainty associated with x and y. Any units are permitted.}
+\item{spatialUncertainty}{Character string naming the spatial-uncertainty
+column in dat.}
 
-\item{identifier}{String. Column name in dat giving record "identifiers". Identifiers are used to group the data; heuristics will be calculated separately for each group.}
+\item{identifier}{Character string naming the grouping column in dat. Results
+are calculated separately for each identifier.}
 
-\item{res}{Numeric. Spatial resolution at which to grid the occurrence data.}
+\item{res}{A single positive, finite number giving grid-cell width and height
+in the units of the supplied coordinates. Geographic coordinates therefore
+use degrees, while projected coordinates commonly use metres.}
 
-\item{logCount}{Logical. Whether to log transform counts for visual purposes. Useful where there is large variation in counts across cells.}
+\item{logCount}{Logical. For density output, whether plotted and returned cell
+counts are transformed with log10. It has no effect on nPeriods or overlap;
+period presence is always calculated from untransformed counts.}
 
-\item{countries}{String or vector. Country names to be passed to ggplot2::map_data. Needed to add country borders to your plot. Countries should only be used if you are working on
-the WGS84 coordinate reference system. Otherwise see shp. If the levels in the identifier field of dat are spatial units (e.g. countries), then the countries argument should be provided a list object.
-The names of each element in the list should correspond to one level of identifier, and the contents of that element should be a country name that is valid for use with ggplot2::map_data. Both countries and shp may
-be left unspecified, but in this case no country borders will be presented on the returned plots. Do not specify both countries and shp.}
+\item{countries}{Character vector of country names accepted by
+ggplot2::map_data("world"), or a named list with one entry per identifier.
+Use only with longitude/latitude coordinates. Optional.}
 
-\item{shp}{String. If you are not working on WGS84, then you can provide a shapefile (spatialPolygons or spatialPolygonsDataFrame) with the country borders on the relevant crs for plotting. As with countries,
-if the levels in identifier denote spatial subsets of the data, then shp may be provided as a list, with the name of each element corresponding to one level of the identifier field in dat.
-Do not specify both countries and shp.}
+\item{shp}{A spatial polygon object, or a named list with one object per
+identifier, used only to add boundaries to plots. Do not supply both
+countries and shp.}
 
-\item{periods}{String. A list of time periods. For example, for two periods, the first spanning 1950 to 1990, and the second 1991 to 2019: periods = list(1950:1990, 1991:2019).}
+\item{periods}{A non-empty list of non-empty, non-overlapping numeric vectors
+defining periods in the requested order. Every supplied period is retained,
+including periods containing no observations.}
 
-\item{maxSpatUncertainty}{Numeric. Maximum permitted spatial uncertainty. All records more uncertain than this value will be dropped. Units must match the units in your data.}
+\item{maxSpatUncertainty}{Optional maximum permitted spatial uncertainty.
+Records with missing uncertainty or values above this threshold are removed.}
 
-\item{output}{String. Either "density", "overlap" or "nPeriods". If density then the maps show the density of records (grid cell^-1) per period and level of identifier.
-If overlap then one map is returned per level of identifier showing which cells have been sampled in >= \code{minPeriods} periods.
-If nPeriods then one map is returned per level of identifier showing the number of periods in which each grid cell has been sampled.}
+\item{output}{Character string selecting "density", "nPeriods", or
+"overlap". See Details.}
 
-\item{minPeriods}{Numeric. Lower limit of periods with sampling for cells to show up on the map. Defaults to NULL in which case only grid cells sampled in all \code{periods} are shown. This argument
-only applies if \code{output} = "overlap".}
+\item{minPeriods}{For overlap output, a single integer from one to
+length(periods) giving the minimum sampled-period count. The default NULL
+requires sampling in every user-supplied period.}
 
-\item{returnRaster}{Logical. Whether or not to return rasters underpinning maps. This might be useful if you want to manipulate them in some way (e.g. convert the number of periods sampled to the proportion of periods samples, etc.).}
+\item{returnRaster}{Logical. Whether to return the rasters underpinning the
+maps in addition to the named list of plots.}
 }
 \value{
-By default, a named list of ggplot objects, one per identifier;
-density plots are faceted by period. If \code{returnRaster = TRUE}, returns
-a list with \code{plots} (that named plot list) and \code{rasters} (a
-RasterStack containing the corresponding raster results).
+By default, a named list of ggplot objects, one per identifier.
+Density plots contain facets p1, p2, and so on in the supplied period order.
+If returnRaster is TRUE, a list with plots and rasters is returned. rasters
+is a RasterStack ordered first by identifier and then, for density output,
+by supplied period. Density layer names have the form id.ID.period.pN,
+where ID is the identifier and N is the period index; other modes use
+id.ID. Names are made syntactically valid and unique.
 }
 \description{
-This function grids and then maps species occurrence data.
+Counts occurrence records on a common spatial grid and maps either those
+counts, the number of sampled periods, or cells sampled in at least a chosen
+number of periods.
+}
+\details{
+A single rectangular grid spanning all retained coordinates is used
+for every identifier and requested period. Cell boundaries are multiples of
+res relative to coordinate zero. A coordinate on a boundary is placed in
+the cell beginning at that boundary. This zero-aligned convention makes cell
+width, height, and alignment independent of record order, identifier, and
+period, but can change results from earlier package versions whose grid
+began at the minimum observed coordinate and did not use res exactly.
+
+Records with missing or non-finite years or coordinates are removed with a
+warning. Records outside periods are excluded and do not determine the grid.
+Missing identifiers are not permitted. A grid or expanded
+identifier-by-period stack exceeding ten million cell values is rejected to
+prevent accidental excessive allocation.
+
+The output modes are:
+\itemize{
+\item "density": number of occurrence rows in each grid cell, separately for
+every identifier and period. Repeated coordinates count repeatedly. This
+is records per grid cell, not an area-standardised or spatially continuous
+density. Unoccupied cells are NA. If logCount is TRUE, log10(count) is
+used in both the map and returned density rasters; thus a raw count of one
+is returned as zero. Period facets share one fill scale for comparison,
+but their values are neither pooled nor summed across periods.
+\item "nPeriods": number of supplied periods containing at least one record in
+each cell, calculated from raw count presence. Cells never sampled in any
+period are NA.
+\item "overlap": logical coverage. Qualifying cells are TRUE and other cells
+are NA; qualification means that the raw-count sampled-period total is at
+least minPeriods.
+}
 }
 \seealso{
-\code{\link{assessSpatialBias}} which measures deviation from a
-random spatial distribution.
+assessSpatialBias(), which measures deviation from a random spatial
+distribution.
 }

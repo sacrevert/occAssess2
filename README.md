@@ -106,7 +106,8 @@ Both functions return a list containing the numerical result in
 - <code>assessSpeciesID()</code>: count or proportion of records identified to species.
 - <code>assessRarityBias()</code>: association between recorded range size and
   record count.
-- <code>assessSpatialCov()</code>: gridded spatial coverage by period.
+- <code>assessSpatialCov()</code>: gridded record counts and sampled-period
+  coverage.
 - <code>assessSpatialBias()</code>: nearest-neighbour index relative to random
   samples drawn within a supplied raster mask.
 - <code>assessEnvBias()</code>: occurrence locations in principal-component
