@@ -450,3 +450,52 @@ itself evidence of a causal selection process. This implementation adapts the
 KDE/HDR environmental-coverage idea explored in
 [npmsEnvBiasChecks](https://github.com/sacrevert/npmsEnvBiasChecks) without its
 project-specific clustering or data dependencies.
+
+#### assessBias1D
+
+<code>assessBias1D()</code> compares the distribution of one variable among
+sampled units with its distribution across a reference population. The optional
+metrics table reports total variation distance (TV) and mean absolute error
+(MAE) before and after weighting. This synthetic example has known population
+proportions of 0.2, 0.1, 0.4, and 0.3, while the unweighted sample proportions
+are 0.1, 0.2, 0.3, and 0.4.
+
+```{r one-dimensional-bias}
+biasPopulation <- data.frame(
+  environment = rep(1:4, c(20, 10, 40, 30)),
+  sampled = 0L
+)
+sampledRows <- c(1, 21:22, 31:33, 71:74)
+biasPopulation$sampled[sampledRows] <- 1L
+
+# These row-aligned weights give the sampled units total bin weights
+# proportional to the reference-population distribution.
+calibrationWeights <- numeric(nrow(biasPopulation))
+calibrationWeights[sampledRows] <- rep(
+  c(0.20, 0.05, 4 / 30, 0.075),
+  c(1, 2, 3, 4)
+)
+
+bias1D <- assessBias1D(
+  pop = biasPopulation,
+  R = "sampled",
+  x = "environment",
+  weights = calibrationWeights,
+  breaks = c(0.5, 1.5, 2.5, 3.5, 4.5),
+  RNames = "survey",
+  WNames = "calibrated",
+  returnMetrics = TRUE
+)
+
+bias1D$metrics
+bias1D$plot
+```
+
+The unweighted comparison has TV 0.2 and MAE 0.1. Here the illustrative
+weights exactly reproduce the reference bin proportions, so both weighted
+metrics are zero. In general, weighting can either reduce or increase the
+discrepancy. For <code>K</code> bins, <code>MAE = 2 * TV / K</code>, so these
+are related summaries rather than independent evidence. Both depend on the
+reference population, variable, bin boundaries, missing-value treatment, and
+weights. They describe discrete binned distributions and are not formal tests
+or universal estimates of sampling bias.

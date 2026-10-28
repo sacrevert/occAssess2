@@ -193,7 +193,8 @@ complete Darwin Core interval parsing is not claimed.
 - <code>assessSpatialUncertainty()</code>: distribution of reported spatial
   uncertainty and the pooled proportion of records for which it is specified.
 - <code>assessBias1D()</code>: comparison of sample and population distributions
-  for one variable, optionally after weighting.
+  for one variable, optionally after weighting, with optional total variation
+  distance and mean absolute error calculated from common-bin proportions.
 - <code>assessRepeatVisits()</code>: occurrence-record counts per grid cell per
   specified period-year, as a proxy for repeated spatial sampling.
 
