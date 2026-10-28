@@ -187,6 +187,9 @@ complete Darwin Core interval parsing is not claimed.
   samples drawn within a supplied raster mask.
 - <code>assessEnvBias()</code>: occurrence locations in principal-component
   environmental space, optionally relative to background environmental data.
+- <code>assessEnvCoverage()</code>: the proportion of a reference environmental
+  sample lying within probability-mass highest-density regions fitted to
+  occurrence environments in a common, background-based PCA space.
 - <code>assessSpatialUncertainty()</code>: distribution of reported spatial
   uncertainty and the pooled proportion of records for which it is specified.
 - <code>assessBias1D()</code>: comparison of sample and population distributions
@@ -200,6 +203,15 @@ uncertainty units must be internally consistent. Spatial resolutions and masks
 must use the same coordinate reference system as the occurrence coordinates.
 See each function's help page for its exact missing-data and return-value
 behavior.
+
+<code>assessEnvCoverage()</code> complements the visual PCA comparison from
+<code>assessEnvBias()</code> with reproducible kernel-density/HDR coverage
+statistics. It requires an explicit background sample defining the
+environmental domain of interest. The result depends on that background,
+bandwidth, sample size, selected PCA axes, and the unit represented by each
+occurrence row; it is not a probability of occurrence or an automatic measure
+or correction of causal sampling bias. See the reproducible vignette for a
+self-contained two-period example.
 
 ## Vignettes and case studies
 
