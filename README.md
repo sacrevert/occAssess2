@@ -112,6 +112,9 @@ Both functions return a list containing the numerical result in
 ## What can the package assess?
 
 - <code>assessRecordNumber()</code>: number of occurrence records per period.
+- <code>assessSpeciesCellCounts()</code>: raw record counts alongside unique
+  species-grid-cell combinations per period, reducing sensitivity to repeated
+  records of the same species in the same cell.
 - <code>assessSpeciesNumber()</code>: number of recorded species per period.
 - <code>assessSpeciesID()</code>: count or proportion of records identified to species.
 - <code>assessRarityBias()</code>: association between recorded range size and

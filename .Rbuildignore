@@ -3,4 +3,5 @@
 ^\.travis\.yml$
 ^\.github$
 ^cran-comments\.md$
+^CONTRIBUTING\.md$
 ^vignettes/.*\.orig$
