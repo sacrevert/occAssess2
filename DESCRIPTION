@@ -4,12 +4,12 @@ Version: 1.3.0
 Authors@R: c(
     person(given = "Rob",
            family = "Boyd",
-           role = c("aut", "cre"),
+           role = "aut",
            email = "robboy@ceh.ac.uk",
            comment = c(ORCID = "0000-0002-7973-9865")),
     person(given = "Oliver",
            family = "Pescott",
-           role = "aut",
+           role = c("aut", "cre"),
            email = "olipes@ceh.ac.uk",
            comment = c(ORCID = "0000-0002-0685-8046"))
     )
