@@ -218,23 +218,9 @@ assessSpatialCov <- function(dat,
     stop("No records fall within the requested periods.")
   }
 
-  cellBin <- function(coordinate) {
-    scaled <- coordinate / res
-    if (any(!is.finite(scaled))) {
-      stop("Coordinates are too large relative to res to construct a grid.")
-    }
-    nearestInteger <- round(scaled)
-    tolerance <- pmin(
-      sqrt(.Machine$double.eps),
-      8 * .Machine$double.eps * pmax(1, abs(scaled))
-    )
-    onBoundary <- abs(scaled - nearestInteger) <= tolerance
-    scaled[onBoundary] <- nearestInteger[onBoundary]
-    floor(scaled)
-  }
-
-  xBin <- cellBin(dat$x)
-  yBin <- cellBin(dat$y)
+  cellBins <- .occAssessCellBins(dat$x, dat$y, res)
+  xBin <- cellBins$x
+  yBin <- cellBins$y
   xRange <- range(xBin)
   yRange <- range(yBin)
   nCols <- xRange[2] - xRange[1] + 1
