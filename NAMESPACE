@@ -2,6 +2,7 @@
 
 export(assessBias1D)
 export(assessEnvBias)
+export(assessEnvCoverage)
 export(assessRarityBias)
 export(assessRecordNumber)
 export(assessRepeatVisits)
