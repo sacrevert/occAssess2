@@ -4,10 +4,10 @@
 \alias{assessSpatialUncertainty}
 \title{Assess reporting of spatial uncertainty}
 \usage{
-assessSpatialUncertainty(dat, periods)
+assessSpatialUncertainty(dat, periods, dateHandling = NULL)
 }
 \arguments{
-\item{dat}{A data frame containing columns named \code{species}, \code{x}, \code{y}, \code{year},
+\item{dat}{A data frame containing columns named \code{species}, \code{x}, \code{y}, optionally \code{year},
 \code{spatialUncertainty}, and \code{identifier}. \code{identifier} must not contain missing
 values. Missing \code{spatialUncertainty} values indicate that uncertainty was not
 specified. The units of non-missing uncertainty values must be consistent,
@@ -15,12 +15,16 @@ but may be chosen by the user.}
 
 \item{periods}{A list of vectors defining the years in each time period. For
 example, \code{list(1950:1990, 1991:2019)} defines two periods.}
+
+\item{dateHandling}{Optional uncertain-date configuration. When non-\code{NULL},
+start/end columns may replace \code{year}; see Details.}
 }
 \value{
 A list with two elements: \code{data}, a one-column numeric matrix named
 \code{proportion_specified} with identifiers as row names and the supplied
 \code{periods} stored as an attribute; and \code{plot}, a ggplot object containing the
-period-grouped histograms and pooled annotations.
+period-grouped histograms and pooled annotations. Temporal diagnostics are
+stored in the result's \code{temporalDiagnostics} attribute.
 }
 \description{
 Calculates, for each identifier, the proportion of retained records for which
@@ -28,8 +32,8 @@ spatial uncertainty is specified and plots the distributions of the specified
 uncertainty values by period.
 }
 \details{
-Records with missing years are removed with a warning. Records whose
-years do not occur in \code{periods} are also excluded. For each identifier, the
+Records without an assigned period are excluded using the shared
+temporal rules documented in the README. For each identifier, the
 returned value is pooled across all selected periods and is calculated as the
 number of retained records with non-missing \code{spatialUncertainty} divided by
 the total number of retained records. Thus, records with missing uncertainty
@@ -39,4 +43,7 @@ The histogram includes every non-missing spatial uncertainty value from the
 retained records and overlays the distributions for the selected periods. No
 fixed plotting range is applied. Its annotation is the pooled proportion, not
 a period-specific proportion.
+}
+\seealso{
+\link{temporal-assignment}
 }

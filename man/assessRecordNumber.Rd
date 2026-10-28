@@ -14,12 +14,14 @@ assessRecordNumber(
   identifier,
   periods,
   maxSpatUncertainty = NULL,
-  normalize = FALSE
+  normalize = FALSE,
+  dateHandling = NULL
 )
 }
 \arguments{
-\item{dat}{A data frame containing species, coordinate, year,
-spatial-uncertainty, and identifier columns.}
+\item{dat}{A data frame containing species, coordinate,
+spatial-uncertainty, identifier, and exact-year and/or interval-bound
+columns.}
 
 \item{species}{Character string. column name in dat giving species names.}
 
@@ -27,7 +29,8 @@ spatial-uncertainty, and identifier columns.}
 
 \item{y}{string. Column name in dat giving y coordinates. Any coordinate and spatial reference systems are permitted.}
 
-\item{year}{string. Column name in dat giving years.}
+\item{year}{Character string naming the exact-year column, or \code{NULL} when
+interval mode is used without an exact-year fallback.}
 
 \item{spatialUncertainty}{String. Column name in dat giving uncertainty associated with x and y. Any units are permitted.}
 
@@ -38,6 +41,9 @@ spatial-uncertainty, and identifier columns.}
 \item{maxSpatUncertainty}{Numeric. Maximum permitted spatial uncertainty. All records more uncertain than this value will be dropped. Units must match the units in your data.}
 
 \item{normalize}{Logical. Whether or not to normalize the counts for each level of identifier. This is helpful where the number of records varies widely among levels of identifier.}
+
+\item{dateHandling}{Optional named list configuring uncertain-date columns
+and allocation rules. See Details.}
 }
 \value{
 A list with \code{data}, a data frame containing \code{val},
@@ -47,6 +53,13 @@ A list with \code{data}, a data frame containing \code{val},
 Calculates the number of occurrence records in each user-defined period and
 identifier group.
 }
+\details{
+With \code{dateHandling = NULL}, records are assigned from \code{year} as in
+earlier versions. Otherwise, use \code{start} and \code{end} to name uncertainty-bound
+columns and optionally set \code{ambiguous}, \code{endOnly}, \code{startOnly}, and \code{ties}.
+See the README temporal-uncertainty section for the complete rules. Temporal
+diagnostics are stored in the \code{temporalDiagnostics} result attribute.
+}
 \seealso{
-\code{\link{assessSpeciesNumber}} which gives the number of species recorded each period.
+\code{\link[=assessSpeciesNumber]{assessSpeciesNumber()}} and \link{temporal-assignment}
 }

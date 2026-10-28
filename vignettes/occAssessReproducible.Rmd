@@ -49,6 +49,62 @@ In this example, we specify five two-year periods covering 2001 to 2010.
 periods <- list(2001:2002, 2003:2004, 2005:2006, 2007:2008, 2009:2010)
 ```
 
+### Temporally uncertain observations
+
+All period-based functions use one temporal-assignment implementation. Date
+bounds describe uncertainty about when one observation occurred; they do not
+mean continuous observation and never cause a row to be copied into several
+periods. Intervals wholly contained in a period are assigned automatically.
+Ambiguous intervals are dropped by default, while optional allocation rules can
+assign each to one period.
+
+This small example combines an exact-year fallback, a range within one period,
+a range crossing a boundary, an end-only record, and an exact ISO date encoded
+as equal bounds.
+
+```{r uncertain-dates}
+uncertainDat <- data.frame(
+  species = rep("example species", 5),
+  x = 1:5,
+  y = 1:5,
+  year = c(1995, NA, NA, NA, NA),
+  startDate = c(NA, "2002", "1999", NA, "2005-06-14"),
+  endDate = c(NA, "2007", "2003", "2005", "2005-06-14"),
+  spatialUncertainty = 0,
+  identifier = "survey"
+)
+uncertainPeriods <- list(1990:1999, 2000:2009)
+
+dropDates <- suppressWarnings(assessRecordNumber(
+  dat = uncertainDat,
+  species = "species", x = "x", y = "y", year = "year",
+  spatialUncertainty = "spatialUncertainty", identifier = "identifier",
+  periods = uncertainPeriods,
+  dateHandling = list(start = "startDate", end = "endDate")
+))
+
+overlapDates <- suppressWarnings(assessRecordNumber(
+  dat = uncertainDat,
+  species = "species", x = "x", y = "y", year = "year",
+  spatialUncertainty = "spatialUncertainty", identifier = "identifier",
+  periods = uncertainPeriods,
+  dateHandling = list(
+    start = "startDate", end = "endDate",
+    ambiguous = "maxOverlap", endOnly = "earliest"
+  )
+))
+
+dropDates$data
+overlapDates$data
+attr(overlapDates, "temporalDiagnostics")
+```
+
+`maxOverlap` is a pragmatic allocation rule, not an estimate of the true date.
+Using `start`, `end`, `earliest`, or `latest` can shift apparent trends towards
+earlier or later periods. Analysts should choose and report a rule appropriate
+to their data, and can inspect the `temporalDiagnostics` attribute to see how
+many records were assigned or excluded.
+
 ### Functions
 
 The functions below use the occurrence data and periods defined above. Most

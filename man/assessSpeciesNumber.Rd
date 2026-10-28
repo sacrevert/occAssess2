@@ -14,12 +14,14 @@ assessSpeciesNumber(
   identifier,
   periods,
   maxSpatUncertainty = NULL,
-  normalize = FALSE
+  normalize = FALSE,
+  dateHandling = NULL
 )
 }
 \arguments{
-\item{dat}{A data frame containing species, coordinate, year,
-spatial-uncertainty, and identifier columns.}
+\item{dat}{A data frame containing species, coordinate,
+spatial-uncertainty, identifier, and exact-year and/or interval-bound
+columns.}
 
 \item{species}{Character string. column name in dat giving species names.}
 
@@ -27,7 +29,8 @@ spatial-uncertainty, and identifier columns.}
 
 \item{y}{string. Column name in dat giving y coordinates. Any coordinate and spatial reference systems are permitted.}
 
-\item{year}{string. Column name in dat giving years.}
+\item{year}{Character string naming the exact-year column, or \code{NULL} in
+interval mode when no exact-year fallback is available.}
 
 \item{spatialUncertainty}{String. Column name in dat giving uncertainty associated with x and y. Any units are permitted.}
 
@@ -38,6 +41,8 @@ spatial-uncertainty, and identifier columns.}
 \item{maxSpatUncertainty}{Numeric. Maximum permitted spatial uncertainty. All records more uncertain than this value will be dropped. Units must match the units in your data.}
 
 \item{normalize}{Logical. Whether or not to normalize the counts for each level of identifier. This is helpful where the number of records varies widely among levels of identifier.}
+
+\item{dateHandling}{Optional uncertain-date configuration; see Details.}
 }
 \value{
 A list with \code{data}, a data frame containing \code{val},
@@ -47,6 +52,12 @@ A list with \code{data}, a data frame containing \code{val},
 Calculates the number of unique, non-missing species recorded in each
 user-defined period and identifier group.
 }
+\details{
+\code{dateHandling = NULL} preserves exact-year assignment. In interval
+mode, name start/end columns and allocation rules as documented in the
+README. Diagnostics are stored in the result's \code{temporalDiagnostics}
+attribute.
+}
 \seealso{
-\code{\link{assessSpeciesID}} which gives the number or proportion of records identified to species level.
+\code{\link[=assessSpeciesID]{assessSpeciesID()}} and \link{temporal-assignment}
 }
