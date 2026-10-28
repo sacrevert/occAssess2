@@ -17,7 +17,10 @@ assessRarityBias(
   prevPerPeriod,
   maxSpatUncertainty = NULL,
   metric = "r2",
-  dateHandling = NULL
+  dateHandling = NULL,
+  returnDiagnostics = FALSE,
+  plotRegressions = FALSE,
+  labelTopResiduals = 0
 )
 }
 \arguments{
@@ -25,39 +28,62 @@ assessRarityBias(
 spatial-uncertainty, identifier, and exact-year and/or interval-bound
 columns.}
 
-\item{species}{Character string. column name in dat giving species names.}
+\item{species}{Character string naming the species column in \code{dat}.}
 
-\item{x}{string. Column name in dat giving x coordinates. Any coordinate and spatial reference systems are permitted.}
+\item{x}{Character string naming the x-coordinate column in \code{dat}.}
 
-\item{y}{string. Column name in dat giving y coordinates. Any coordinate and spatial reference systems are permitted.}
+\item{y}{Character string naming the y-coordinate column in \code{dat}.}
 
 \item{year}{Character string naming the exact-year column, or \code{NULL} in
 interval mode without an exact-year fallback.}
 
-\item{spatialUncertainty}{String. Column name in dat giving uncertainty associated with x and y. Any units are permitted.}
+\item{spatialUncertainty}{Character string naming the spatial-uncertainty
+column in \code{dat}.}
 
-\item{identifier}{String. Column name in dat giving record "identifiers". Identifiers are used to group the data; heuristics will be calculated separately for each group.}
+\item{identifier}{Character string naming the grouping column in \code{dat}.}
 
-\item{periods}{String. A list of time periods. For example, for two periods, the first spanning 1950 to 1990, and the second 1991 to 2019: periods = list(1950:1990, 1991:2019).}
+\item{periods}{A list of non-overlapping numeric year vectors. Results use
+the supplied period order.}
 
-\item{res}{Numeric. Spatial resolution at which to grid the data for estimation of range size.}
+\item{res}{A single positive, finite number giving the width and height of
+grid cells in the units of \code{x} and \code{y}.}
 
 \item{prevPerPeriod}{Logical. If \code{TRUE}, occupied cells are calculated
-separately for each period. If \code{FALSE}, occupied cells for a species
-are calculated across all selected periods.}
+separately for each period. If \code{FALSE}, occupied cells for a species are
+calculated across all selected periods, while record counts remain
+period-specific.}
 
-\item{maxSpatUncertainty}{Numeric. Maximum permitted spatial uncertainty. All records more uncertain than this value will be dropped. Units must match the units in your data.}
+\item{maxSpatUncertainty}{Optional maximum permitted spatial uncertainty.
+Records with missing uncertainty or values above this threshold are
+dropped. Units must match the supplied data.}
 
 \item{metric}{Character string. \code{"r2"} returns the coefficient of
-determination from the linear regression; \code{"cor"} returns Pearson's
-correlation coefficient.}
+determination; \code{"cor"} returns Pearson correlation. Both diagnostics are
+calculated from the same untransformed OLS relationship.}
 
 \item{dateHandling}{Optional uncertain-date configuration. \code{NULL} preserves
-exact-year assignment; see Details.}
+exact-year assignment; see \link{temporal-assignment}.}
+
+\item{returnDiagnostics}{Logical. If \code{TRUE}, append \code{speciesDiagnostics} and
+\code{regressionDiagnostics} to the established result.}
+
+\item{plotRegressions}{Logical. If \code{TRUE}, append \code{regressionPlots}, a named
+list with one period-faceted ggplot per identifier. This also makes both
+diagnostic data frames available.}
+
+\item{labelTopResiduals}{Non-negative integer. In regression plots, label up
+to this many species with the largest finite absolute residual in each
+identifier-period panel. Zero, the default, draws no species labels.}
 }
 \value{
-A list with \code{plot}, a ggplot object, and \code{data}, a data
-frame containing \code{period}, \code{id}, and \code{index}.
+By default, the established list with \code{plot}, the index time series,
+and \code{data}, a data frame with \code{period}, \code{id}, and \code{index}. With diagnostics
+requested, \code{speciesDiagnostics} contains \code{identifier}, \code{period}, \code{species},
+\code{occupiedCells}, \code{recordCount}, \code{fittedCount}, \code{residual},
+\code{standardizedResidual}, \code{leverage}, and \code{cooksDistance};
+\code{regressionDiagnostics} contains one row per identifier-period combination
+with \code{nSpecies}, coefficients, both indices, residual RMSE, and \code{status}.
+\code{regressionPlots} is added only when \code{plotRegressions = TRUE}.
 }
 \description{
 For each period and identifier, regresses species record count on the number
@@ -66,12 +92,43 @@ is either the coefficient of determination or Pearson correlation. No index
 is calculated for combinations containing fewer than five species.
 }
 \details{
-Temporal assignment is shared with the other period-based
-assessments. An uncertain record is allocated to at most one period before
-both record counts and occupied-cell calculations, including when
-\code{prevPerPeriod = FALSE}. Diagnostics are stored in the result's
+For every identifier-period combination, the fitted model is
+
+\code{recordCount = intercept + slope * occupiedCells + residual}.
+
+Counts and models use their original, untransformed scales. The raw residual
+is \code{recordCount - fittedCount}; a positive value means that a species has
+more records than predicted conditional on its estimated occupied-cell
+count. It is not proof of over-recording, a significance classification, or
+a direct measurement of sampling bias.
+
+Grid cells are aligned to multiples of \code{res} relative to coordinate zero,
+using the same convention as \code{\link[=assessSpatialCov]{assessSpatialCov()}}. Boundaries are therefore
+deterministic and cells have exactly the requested width and height. Records
+with missing or non-finite coordinates remain in \code{recordCount} but cannot
+contribute an occupied cell. Missing species identities are excluded.
+
+At least five represented species and variation in \code{occupiedCells} are
+required for a valid two-parameter regression. Constant record counts permit
+fitted counts but make R-squared and correlation undefined. Non-finite
+standardised residuals, leverage values, or Cook's distances are returned as
+\code{NA}, rather than as misleading infinite values.
+
+\code{residualRMSE} is \code{sqrt(mean(residual^2))} across the species fitted in that
+identifier-period combination. Occupied-cell count is only a proxy for
+commonness and is estimated from the same records as the response. A strong
+linear relationship therefore does not establish unbiased sampling, and
+highly recorded or influential species can strongly affect the fitted line.
+
+Temporal assignment is shared with the other period-based assessments. Each
+uncertain record is allocated to at most one period before record and cell
+counts are calculated. Temporal diagnostics remain in the result's
 \code{temporalDiagnostics} attribute.
 }
+\references{
+Boyd et al. (2021), \emph{Ecology and Evolution}.
+\doi{10.1002/ece3.8299}
+}
 \seealso{
-\link{temporal-assignment}
+\code{\link[=assessSpatialCov]{assessSpatialCov()}} and \link{temporal-assignment}
 }

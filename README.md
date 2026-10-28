@@ -179,7 +179,8 @@ complete Darwin Core interval parsing is not claimed.
 - <code>assessSpeciesNumber()</code>: number of recorded species per period.
 - <code>assessSpeciesID()</code>: count or proportion of records identified to species.
 - <code>assessRarityBias()</code>: association between recorded range size and
-  record count.
+  record count, with optional species residuals, influence diagnostics and
+  period-specific regression plots.
 - <code>assessSpatialCov()</code>: gridded record counts and sampled-period
   coverage.
 - <code>assessSpatialBias()</code>: nearest-neighbour index relative to random
