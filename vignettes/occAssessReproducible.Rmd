@@ -219,14 +219,45 @@ taxBias <- assessRarityBias(dat = spDat,
                             y = "y",
                             year = "year", 
                             spatialUncertainty = "spatialUncertainty",
-                            identifier = "identifier")
+                            identifier = "identifier",
+                            returnDiagnostics = TRUE,
+                            plotRegressions = TRUE,
+                            labelTopResiduals = 2)
 
 taxBias$data
 
 taxBias$plot + ggplot2::ylim(c(0,1))
 ```
 
-As you can see, the rarity bias index is roughly 0 for both levels of identifier and in each period. This indicates that species are not recorded in proportion to their commonness, which is expected given that the data were not simulated in such a way. 
+The optional summaries expose the untransformed OLS models underpinning that
+time series. Positive residuals have more records than fitted conditional on
+their occupied-cell count; negative residuals have fewer. They are exploratory
+diagnostics, not significance tests or proof that a species is genuinely over-
+or under-sampled.
+
+```{r rarity-diagnostics}
+taxBias$regressionDiagnostics
+
+raritySpecies <- taxBias$speciesDiagnostics
+finiteResiduals <- raritySpecies[is.finite(raritySpecies$residual), ]
+
+# Largest positive and negative residuals
+head(finiteResiduals[order(-finiteResiduals$residual),
+                     c("identifier", "period", "species", "residual")])
+head(finiteResiduals[order(finiteResiduals$residual),
+                     c("identifier", "period", "species", "residual")])
+
+# One customisable, period-faceted plot per identifier
+taxBias$regressionPlots[[1]]
+```
+
+With `prevPerPeriod = FALSE`, occupied-cell counts are calculated across all
+selected periods while record counts remain period-specific. Setting it to
+`TRUE` estimates occupied cells separately in each period. Occupied-cell count
+is only a proxy for commonness and is estimated from the same recording process
+as record count. Consequently, a strong fitted relationship does not establish
+unbiased sampling, and highly recorded or influential species can materially
+affect the line.
 
 #### assessSpatialCov 
 
