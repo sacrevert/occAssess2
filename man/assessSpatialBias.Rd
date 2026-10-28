@@ -16,11 +16,14 @@ assessSpatialBias(
   mask,
   nSamps = 50,
   degrade = TRUE,
-  maxSpatUncertainty = NULL
+  maxSpatUncertainty = NULL,
+  dateHandling = NULL
 )
 }
 \arguments{
-\item{dat}{string. A data.frame containing columns for species name, x coordinates, y coordinates, spatialUncertainty, year and an identifier (used to group the data - heuristic will be calculated for each group).}
+\item{dat}{A data frame containing species, coordinate,
+spatial-uncertainty, identifier, and exact-year and/or interval-bound
+columns.}
 
 \item{species}{Character string. column name in dat giving species names.}
 
@@ -28,7 +31,8 @@ assessSpatialBias(
 
 \item{y}{string. Column name in dat giving y coordinates. Any coordinate and spatial reference systems are permitted.}
 
-\item{year}{string. Column name in dat giving years.}
+\item{year}{Character string naming the exact-year column, or \code{NULL} in
+interval mode without an exact-year fallback.}
 
 \item{spatialUncertainty}{String. Column name in dat giving uncertainty associated with x and y. Any units are permitted.}
 
@@ -49,6 +53,9 @@ compare the empirical and random nearest-neighbour distances.}
 different \code{periods}.}
 
 \item{maxSpatUncertainty}{Numeric. Maximum permitted spatial uncertainty. All records more uncertain than this value will be dropped. Units must match the units in your data.}
+
+\item{dateHandling}{Optional uncertain-date configuration. \code{NULL} preserves
+exact-year assignment; see Details.}
 }
 \value{
 A list with \code{data}, a data frame containing mean, 5th-percentile,
@@ -64,6 +71,11 @@ samples contain the same number of points as the retained occurrence data,
 up to the number of available raster cells. Results are stochastic unless
 the caller sets the random-number seed.
 }
+\details{
+Every occurrence is assigned to at most one period before optional
+coordinate degradation. Temporal diagnostics are stored in the result's
+\code{temporalDiagnostics} attribute.
+}
 \seealso{
-\code{\link{assessSpatialCov}} which maps your data in geographical space.
+\code{\link[=assessSpatialCov]{assessSpatialCov()}} and \link{temporal-assignment}
 }

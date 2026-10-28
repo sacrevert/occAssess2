@@ -6,7 +6,7 @@
 #' and coincident records are not deduplicated.
 #'
 #' @param dat A data frame containing numeric \code{lon}, \code{lat}, and
-#'   \code{year} columns and an \code{identifier} column. Coordinates may be
+#'   an optional exact \code{year} column and an \code{identifier} column. Coordinates may be
 #'   longitude/latitude or projected coordinates, but both coordinate columns
 #'   and \code{spatRes} must use the same coordinate system and units.
 #' @param periods A non-empty list of non-empty, non-overlapping numeric vectors
@@ -15,6 +15,8 @@
 #'   denominator for that period.
 #' @param spatRes A single positive, finite number giving the grid-cell width and
 #'   height in the units of \code{lon} and \code{lat}.
+#' @param dateHandling Optional uncertain-date configuration. When non-`NULL`,
+#'   start/end columns may replace `year`; see Details.
 #'
 #' @details For a grid cell, identifier, and period, the returned value is
 #'
@@ -33,8 +35,9 @@
 #'   alignment independent of row order, period, and identifier. Only records
 #'   in the requested periods determine the grid.
 #'
-#'   Records with missing or non-finite years or coordinates are removed with a
-#'   warning. Records outside all requested periods are excluded. Missing
+#'   In exact-year mode, records with missing or non-finite years or coordinates
+#'   are removed with a warning. Interval-mode exclusions are reported compactly.
+#'   Records outside all requested periods are excluded. Missing
 #'   identifiers are not permitted. A defined period with no observations is
 #'   retained in \code{data} with missing values for every grid cell. Unoccupied
 #'   cells are likewise represented by \code{NA_real_}; the frequency polygon
@@ -45,6 +48,11 @@
 #'   grid or the expanded period-by-identifier output would exceed ten million
 #'   rows; increase \code{spatRes} in that case.
 #'
+#'   Temporal assignment follows the package-wide rules in the README and does
+#'   not change the denominator: counts are still divided by
+#'   `length(periods[[period]])`. Diagnostics are stored in the result's
+#'   `temporalDiagnostics` attribute.
+#'
 #' @return A list with \code{data} and \code{plot}. \code{data} is a data frame
 #'   with columns \code{vals}, \code{identifier}, and \code{Period}. It contains
 #'   one row for every grid-cell, identifier, and period combination;
@@ -52,58 +60,36 @@
 #'   period-year and is missing for unoccupied cells. \code{plot} is a ggplot
 #'   frequency polygon of non-missing \code{vals}, coloured by period and
 #'   faceted by identifier.
+#' @seealso [temporal-assignment]
 #' @export
 
-assessRepeatVisits <- function(dat, periods, spatRes) {
-  required <- c("lon", "lat", "year", "identifier")
+assessRepeatVisits <- function(dat, periods, spatRes, dateHandling = NULL) {
+  yearColumn <- if ("year" %in% names(dat)) "year" else NULL
+  required <- c("lon", "lat", "identifier", if (is.null(dateHandling)) "year")
 
   if (!is.data.frame(dat)) {
     stop("dat must be a data frame.")
   }
   if (any(!(required %in% names(dat)))) {
-    stop("dat must contain columns named lon, lat, year, and identifier.")
+    stop("dat must contain lon, lat, identifier, and an exact year unless interval mode is used.")
   }
   if (nrow(dat) == 0) {
     stop("dat contains no records.")
   }
-  if (!is.numeric(dat$lon) || !is.numeric(dat$lat) || !is.numeric(dat$year)) {
-    stop("lon, lat, and year must be numeric.")
+  if (!is.numeric(dat$lon) || !is.numeric(dat$lat)) {
+    stop("lon and lat must be numeric.")
   }
   if (any(is.na(dat$identifier))) {
     stop("Missing values are not permitted in identifier.")
   }
 
-  if (!is.list(periods) || length(periods) == 0) {
-    stop("periods must be a non-empty list of numeric year vectors.")
-  }
-  validPeriods <- vapply(
-    periods,
-    function(x) {
-      is.numeric(x) && length(x) > 0 && all(is.finite(x)) &&
-        !anyDuplicated(x)
-    },
-    logical(1)
-  )
-  if (!all(validPeriods)) {
-    stop("Each period must be a non-empty finite numeric vector without duplicate years.")
-  }
-  if (anyDuplicated(unlist(periods, use.names = FALSE))) {
-    stop("Periods must not overlap.")
-  }
+  temporal <- assignTemporalPeriods(dat, periods, yearColumn, dateHandling)
+  dat$.Period <- temporal$period
+  dat$.temporalStatus <- temporal$status
 
   if (!is.numeric(spatRes) || length(spatRes) != 1 ||
       is.na(spatRes) || !is.finite(spatRes) || spatRes <= 0) {
     stop("spatRes must be a single positive, finite number.")
-  }
-
-  invalidYear <- !is.finite(dat$year)
-  if (any(invalidYear)) {
-    warning(sprintf(
-      "Removing %d record%s with a missing or non-finite year.",
-      sum(invalidYear),
-      if (sum(invalidYear) == 1) "" else "s"
-    ))
-    dat <- dat[!invalidYear, , drop = FALSE]
   }
 
   invalidCoordinates <- !is.finite(dat$lon) | !is.finite(dat$lat)
@@ -116,13 +102,15 @@ assessRepeatVisits <- function(dat, periods, spatRes) {
     dat <- dat[!invalidCoordinates, , drop = FALSE]
   }
 
-  periodIndex <- rep(NA_integer_, nrow(dat))
-  for (i in seq_along(periods)) {
-    periodIndex[dat$year %in% periods[[i]]] <- i
-  }
-  retained <- !is.na(periodIndex)
-  dat <- dat[retained, , drop = FALSE]
-  periodIndex <- periodIndex[retained]
+  selection <- .finalizeTemporalAssignment(
+    dat$.Period, dat$.temporalStatus, periods, dateHandling,
+    exactMissingWarning = function(n) sprintf(
+      "Removing %d record%s with a missing or non-finite year.",
+      n, if (n == 1) "" else "s"
+    )
+  )
+  diagnostics <- selection$diagnostics
+  dat <- dat[selection$keep, , drop = FALSE]
 
   if (nrow(dat) == 0) {
     stop("No records fall within the requested periods.")
@@ -170,7 +158,7 @@ assessRepeatVisits <- function(dat, periods, spatRes) {
   xCell <- as.integer(xBin - xRange[1] + 1)
   yCell <- as.integer(yRange[2] - yBin + 1)
   dat$.cell <- (yCell - 1L) * nCols + xCell
-  dat$.period <- periodIndex
+  dat$.period <- dat$.Period
 
   output <- lapply(identifiers, function(id) {
     periodOutput <- lapply(seq_along(periods), function(p) {
@@ -210,6 +198,7 @@ assessRepeatVisits <- function(dat, periods, spatRes) {
     ggplot2::scale_colour_discrete(drop = FALSE) +
     ggplot2::facet_wrap(~identifier)
 
-  return(list(data = out,
-              plot = p))
+  return(.addTemporalDiagnostics(
+    list(data = out, plot = p), diagnostics
+  ))
 }

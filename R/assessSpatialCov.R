@@ -4,12 +4,14 @@
 #' counts, the number of sampled periods, or cells sampled in at least a chosen
 #' number of periods.
 #'
-#' @param dat A data frame containing species, coordinate, year,
-#'   spatial-uncertainty, and identifier columns.
+#' @param dat A data frame containing species, coordinate,
+#'   spatial-uncertainty, identifier, and exact-year and/or interval-bound
+#'   columns.
 #' @param species Character string naming the species column in dat.
 #' @param x Character string naming the x-coordinate column in dat.
 #' @param y Character string naming the y-coordinate column in dat.
-#' @param year Character string naming the numeric year column in dat.
+#' @param year Character string naming the exact-year column, or `NULL` in
+#'   interval mode without an exact-year fallback.
 #' @param spatialUncertainty Character string naming the spatial-uncertainty
 #'   column in dat.
 #' @param identifier Character string naming the grouping column in dat. Results
@@ -38,6 +40,8 @@
 #'   requires sampling in every user-supplied period.
 #' @param returnRaster Logical. Whether to return the rasters underpinning the
 #'   maps in addition to the named list of plots.
+#' @param dateHandling Optional uncertain-date configuration. `NULL` preserves
+#'   exact-year assignment; see Details.
 #'
 #' @details A single rectangular grid spanning all retained coordinates is used
 #'   for every identifier and requested period. Cell boundaries are multiples of
@@ -47,8 +51,10 @@
 #'   period, but can change results from earlier package versions whose grid
 #'   began at the minimum observed coordinate and did not use res exactly.
 #'
-#'   Records with missing or non-finite years or coordinates are removed with a
-#'   warning. Records outside periods are excluded and do not determine the grid.
+#'   Temporal assignment uses the package-wide rules documented in the README;
+#'   every record contributes to at most one period. Interval-mode temporal
+#'   exclusions and records with missing or non-finite coordinates are reported
+#'   compactly. Records outside periods are excluded and do not determine the grid.
 #'   Missing identifiers are not permitted. A grid or expanded
 #'   identifier-by-period stack exceeding ten million cell values is rejected to
 #'   prevent accidental excessive allocation.
@@ -76,8 +82,7 @@
 #'   by supplied period. Density layer names have the form id.ID.period.pN,
 #'   where ID is the identifier and N is the period index; other modes use
 #'   id.ID. Names are made syntactically valid and unique.
-#' @seealso assessSpatialBias(), which measures deviation from a random spatial
-#'   distribution.
+#' @seealso [assessSpatialBias()] and [temporal-assignment]
 #' @importFrom rasterVis gplot
 #' @importFrom ggplot2 map_data
 #' @importFrom maps map
@@ -98,11 +103,14 @@ assessSpatialCov <- function(dat,
                              maxSpatUncertainty = NULL,
                              output = "density",
                              minPeriods = NULL,
-                             returnRaster = FALSE) {
-  required <- c(species, x, y, year, spatialUncertainty, identifier)
+                             returnRaster = FALSE,
+                             dateHandling = NULL) {
+  required <- c(species, x, y, spatialUncertainty, identifier, year)
   if (any(!(required %in% colnames(dat)))) {
     stop("You have specified columns that do not exist in dat.")
   }
+
+  temporal <- assignTemporalPeriods(dat, periods, year, dateHandling)
 
   if (!is.numeric(res) || length(res) != 1 || is.na(res) ||
       !is.finite(res) || res <= 0) {
@@ -119,24 +127,6 @@ assessSpatialCov <- function(dat,
       !(output %in% c("density", "nPeriods", "overlap"))) {
     stop("output must be one of 'density', 'nPeriods', or 'overlap'.")
   }
-  if (!is.list(periods) || length(periods) == 0) {
-    stop("periods must be a non-empty list of numeric year vectors.")
-  }
-  validPeriods <- vapply(
-    periods,
-    function(period) {
-      is.numeric(period) && length(period) > 0 &&
-        all(is.finite(period)) && !anyDuplicated(period)
-    },
-    logical(1)
-  )
-  if (!all(validPeriods)) {
-    stop("Each period must be a non-empty finite numeric vector without duplicate years.")
-  }
-  if (anyDuplicated(unlist(periods, use.names = FALSE))) {
-    stop("Periods must not overlap.")
-  }
-
   if (!is.null(minPeriods)) {
     if (!is.numeric(minPeriods) || length(minPeriods) != 1 ||
         is.na(minPeriods) || !is.finite(minPeriods) ||
@@ -163,12 +153,14 @@ assessSpatialCov <- function(dat,
                     year,
                     spatialUncertainty,
                     identifier)
+  dat$Period <- temporal$period
+  dat$.temporalStatus <- temporal$status
 
   if (nrow(dat) == 0) {
     stop("dat contains no records.")
   }
-  if (!is.numeric(dat$x) || !is.numeric(dat$y) || !is.numeric(dat$year)) {
-    stop("Coordinate and year columns must be numeric.")
+  if (!is.numeric(dat$x) || !is.numeric(dat$y)) {
+    stop("Coordinate columns must be numeric.")
   }
   if (any(is.na(dat$identifier))) {
     stop("Missing values are not permitted in identifier.")
@@ -187,16 +179,6 @@ assessSpatialCov <- function(dat,
     stop("No records remain after spatial-uncertainty filtering.")
   }
 
-  invalidYear <- !is.finite(dat$year)
-  if (any(invalidYear)) {
-    warning(sprintf(
-      "Removing %d record%s with a missing or non-finite year.",
-      sum(invalidYear),
-      if (sum(invalidYear) == 1) "" else "s"
-    ))
-    dat <- dat[!invalidYear, , drop = FALSE]
-  }
-
   invalidCoordinates <- !is.finite(dat$x) | !is.finite(dat$y)
   if (any(invalidCoordinates)) {
     warning(sprintf(
@@ -207,13 +189,15 @@ assessSpatialCov <- function(dat,
     dat <- dat[!invalidCoordinates, , drop = FALSE]
   }
 
-  periodIndex <- rep(NA_integer_, nrow(dat))
-  for (period in seq_along(periods)) {
-    periodIndex[dat$year %in% periods[[period]]] <- period
-  }
-  retained <- !is.na(periodIndex)
-  dat <- dat[retained, , drop = FALSE]
-  periodIndex <- periodIndex[retained]
+  selection <- .finalizeTemporalAssignment(
+    dat$Period, dat$.temporalStatus, periods, dateHandling,
+    exactMissingWarning = function(n) sprintf(
+      "Removing %d record%s with a missing or non-finite year.",
+      n, if (n == 1) "" else "s"
+    )
+  )
+  diagnostics <- selection$diagnostics
+  dat <- dat[selection$keep, , drop = FALSE]
   if (nrow(dat) == 0) {
     stop("No records fall within the requested periods.")
   }
@@ -242,7 +226,7 @@ assessSpatialCov <- function(dat,
   xCell <- as.integer(xBin - xRange[1] + 1)
   yCell <- as.integer(yRange[2] - yBin + 1)
   dat$.cell <- (yCell - 1L) * nCols + xCell
-  dat$.period <- periodIndex
+  dat$.period <- dat$Period
   periodLabels <- paste0("p", seq_along(periods))
 
   template <- raster::raster(
@@ -399,7 +383,7 @@ assessSpatialCov <- function(dat,
   names(plots) <- identifierLabels
 
   if (!returnRaster) {
-    return(plots)
+    return(.addTemporalDiagnostics(plots, diagnostics))
   }
 
   rasterLayers <- list()
@@ -423,5 +407,7 @@ assessSpatialCov <- function(dat,
   returnedRasters <- raster::stack(rasterLayers)
   names(returnedRasters) <- rasterNames
 
-  list(plots = plots, rasters = returnedRasters)
+  .addTemporalDiagnostics(
+    list(plots = plots, rasters = returnedRasters), diagnostics
+  )
 }

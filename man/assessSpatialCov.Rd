@@ -20,12 +20,14 @@ assessSpatialCov(
   maxSpatUncertainty = NULL,
   output = "density",
   minPeriods = NULL,
-  returnRaster = FALSE
+  returnRaster = FALSE,
+  dateHandling = NULL
 )
 }
 \arguments{
-\item{dat}{A data frame containing species, coordinate, year,
-spatial-uncertainty, and identifier columns.}
+\item{dat}{A data frame containing species, coordinate,
+spatial-uncertainty, identifier, and exact-year and/or interval-bound
+columns.}
 
 \item{species}{Character string naming the species column in dat.}
 
@@ -33,7 +35,8 @@ spatial-uncertainty, and identifier columns.}
 
 \item{y}{Character string naming the y-coordinate column in dat.}
 
-\item{year}{Character string naming the numeric year column in dat.}
+\item{year}{Character string naming the exact-year column, or \code{NULL} in
+interval mode without an exact-year fallback.}
 
 \item{spatialUncertainty}{Character string naming the spatial-uncertainty
 column in dat.}
@@ -73,6 +76,9 @@ requires sampling in every user-supplied period.}
 
 \item{returnRaster}{Logical. Whether to return the rasters underpinning the
 maps in addition to the named list of plots.}
+
+\item{dateHandling}{Optional uncertain-date configuration. \code{NULL} preserves
+exact-year assignment; see Details.}
 }
 \value{
 By default, a named list of ggplot objects, one per identifier.
@@ -97,8 +103,10 @@ width, height, and alignment independent of record order, identifier, and
 period, but can change results from earlier package versions whose grid
 began at the minimum observed coordinate and did not use res exactly.
 
-Records with missing or non-finite years or coordinates are removed with a
-warning. Records outside periods are excluded and do not determine the grid.
+Temporal assignment uses the package-wide rules documented in the README;
+every record contributes to at most one period. Interval-mode temporal
+exclusions and records with missing or non-finite coordinates are reported
+compactly. Records outside periods are excluded and do not determine the grid.
 Missing identifiers are not permitted. A grid or expanded
 identifier-by-period stack exceeding ten million cell values is rejected to
 prevent accidental excessive allocation.
@@ -121,6 +129,5 @@ least minPeriods.
 }
 }
 \seealso{
-assessSpatialBias(), which measures deviation from a random spatial
-distribution.
+\code{\link[=assessSpatialBias]{assessSpatialBias()}} and \link{temporal-assignment}
 }

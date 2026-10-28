@@ -14,12 +14,14 @@ assessSpeciesID(
   identifier,
   periods,
   type,
-  maxSpatUncertainty = NULL
+  maxSpatUncertainty = NULL,
+  dateHandling = NULL
 )
 }
 \arguments{
-\item{dat}{A data frame containing species, coordinate, year,
-spatial-uncertainty, and identifier columns.}
+\item{dat}{A data frame containing species, coordinate,
+spatial-uncertainty, identifier, and exact-year and/or interval-bound
+columns.}
 
 \item{species}{Character string. column name in dat giving species names.}
 
@@ -27,7 +29,8 @@ spatial-uncertainty, and identifier columns.}
 
 \item{y}{string. Column name in dat giving y coordinates. Any coordinate and spatial reference systems are permitted.}
 
-\item{year}{string. Column name in dat giving years.}
+\item{year}{Character string naming the exact-year column, or \code{NULL} in
+interval mode without an exact-year fallback.}
 
 \item{spatialUncertainty}{String. Column name in dat giving uncertainty associated with x and y. Any units are permitted.}
 
@@ -38,6 +41,9 @@ spatial-uncertainty, and identifier columns.}
 \item{type}{Character string: \code{"proportion"} or \code{"count"}.}
 
 \item{maxSpatUncertainty}{Numeric. Maximum permitted spatial uncertainty. All records more uncertain than this value will be dropped. Units must match the units in your data.}
+
+\item{dateHandling}{Optional uncertain-date configuration. \code{NULL} preserves
+exact-year assignment; see Details.}
 }
 \value{
 A list with \code{data}, a data frame containing \code{prop},
@@ -47,4 +53,12 @@ A list with \code{data}, a data frame containing \code{prop},
 \description{
 Calculates the proportion or count of records with a non-missing species
 value in each period and identifier group.
+}
+\details{
+In interval mode, \code{dateHandling} names start/end columns and the
+allocation rules documented in the README. Diagnostics are stored in the
+result's \code{temporalDiagnostics} attribute.
+}
+\seealso{
+\link{temporal-assignment}
 }

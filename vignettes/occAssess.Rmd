@@ -70,6 +70,11 @@ In addition to your occurrence data, you must also provide a number of periods i
 periods <- list(1950:1959, 1960:1969, 1970:1979, 1980:1989, 1990:1999, 2000:2009, 2010:2019)
 ```
 
+These historical examples use precisely specified years. Current period-based
+functions also accept uncertain date bounds through `dateHandling`; see the
+reproducible vignette's temporal-uncertainty example for the allocation rules
+and an executable comparison of strategies.
+
 ### Functions
 
 All of the functions in occAssess require two common arguments (in addition to the arguments that specify which column matches which field): dat and periods (outlined above). I will run through each function in the following, indicating where additional arguments are required. Generally, the functions in occAssess return a list with two elements: one being a ggplot2 object, with a separate panel or group for each level of identifier; and a second with the data underpinning the plot.

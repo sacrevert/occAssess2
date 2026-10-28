@@ -16,11 +16,14 @@ assessRarityBias(
   res,
   prevPerPeriod,
   maxSpatUncertainty = NULL,
-  metric = "r2"
+  metric = "r2",
+  dateHandling = NULL
 )
 }
 \arguments{
-\item{dat}{string. A data.frame containing columns for species name, x coordinates, y coordinates, spatialUncertainty, year and an identifier (used to group the data - heuristic will be calculated for each group).}
+\item{dat}{A data frame containing species, coordinate,
+spatial-uncertainty, identifier, and exact-year and/or interval-bound
+columns.}
 
 \item{species}{Character string. column name in dat giving species names.}
 
@@ -28,7 +31,8 @@ assessRarityBias(
 
 \item{y}{string. Column name in dat giving y coordinates. Any coordinate and spatial reference systems are permitted.}
 
-\item{year}{string. Column name in dat giving years.}
+\item{year}{Character string naming the exact-year column, or \code{NULL} in
+interval mode without an exact-year fallback.}
 
 \item{spatialUncertainty}{String. Column name in dat giving uncertainty associated with x and y. Any units are permitted.}
 
@@ -47,6 +51,9 @@ are calculated across all selected periods.}
 \item{metric}{Character string. \code{"r2"} returns the coefficient of
 determination from the linear regression; \code{"cor"} returns Pearson's
 correlation coefficient.}
+
+\item{dateHandling}{Optional uncertain-date configuration. \code{NULL} preserves
+exact-year assignment; see Details.}
 }
 \value{
 A list with \code{plot}, a ggplot object, and \code{data}, a data
@@ -57,4 +64,14 @@ For each period and identifier, regresses species record count on the number
 of occupied grid cells, used as a proxy for recorded range size. The summary
 is either the coefficient of determination or Pearson correlation. No index
 is calculated for combinations containing fewer than five species.
+}
+\details{
+Temporal assignment is shared with the other period-based
+assessments. An uncertain record is allocated to at most one period before
+both record counts and occupied-cell calculations, including when
+\code{prevPerPeriod = FALSE}. Diagnostics are stored in the result's
+\code{temporalDiagnostics} attribute.
+}
+\seealso{
+\link{temporal-assignment}
 }

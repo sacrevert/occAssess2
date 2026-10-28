@@ -4,11 +4,11 @@
 \alias{assessRepeatVisits}
 \title{Summarise occurrence-record counts within grid cells}
 \usage{
-assessRepeatVisits(dat, periods, spatRes)
+assessRepeatVisits(dat, periods, spatRes, dateHandling = NULL)
 }
 \arguments{
 \item{dat}{A data frame containing numeric \code{lon}, \code{lat}, and
-\code{year} columns and an \code{identifier} column. Coordinates may be
+an optional exact \code{year} column and an \code{identifier} column. Coordinates may be
 longitude/latitude or projected coordinates, but both coordinate columns
 and \code{spatRes} must use the same coordinate system and units.}
 
@@ -19,6 +19,9 @@ denominator for that period.}
 
 \item{spatRes}{A single positive, finite number giving the grid-cell width and
 height in the units of \code{lon} and \code{lat}.}
+
+\item{dateHandling}{Optional uncertain-date configuration. When non-\code{NULL},
+start/end columns may replace \code{year}; see Details.}
 }
 \value{
 A list with \code{data} and \code{plot}. \code{data} is a data frame
@@ -53,8 +56,9 @@ every cell exactly \code{spatRes} units wide and high and makes grid
 alignment independent of row order, period, and identifier. Only records
 in the requested periods determine the grid.
 
-Records with missing or non-finite years or coordinates are removed with a
-warning. Records outside all requested periods are excluded. Missing
+In exact-year mode, records with missing or non-finite years or coordinates
+are removed with a warning. Interval-mode exclusions are reported compactly.
+Records outside all requested periods are excluded. Missing
 identifiers are not permitted. A defined period with no observations is
 retained in \code{data} with missing values for every grid cell. Unoccupied
 cells are likewise represented by \code{NA_real_}; the frequency polygon
@@ -64,4 +68,12 @@ truncated in the returned data or plot.
 To prevent accidental excessive allocation, an error is raised when the
 grid or the expanded period-by-identifier output would exceed ten million
 rows; increase \code{spatRes} in that case.
+
+Temporal assignment follows the package-wide rules in the README and does
+not change the denominator: counts are still divided by
+\code{length(periods[[period]])}. Diagnostics are stored in the result's
+\code{temporalDiagnostics} attribute.
+}
+\seealso{
+\link{temporal-assignment}
 }

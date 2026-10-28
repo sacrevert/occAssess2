@@ -14,12 +14,14 @@ assessSpeciesCellCounts(
   identifier,
   periods,
   res,
-  maxSpatUncertainty = NULL
+  maxSpatUncertainty = NULL,
+  dateHandling = NULL
 )
 }
 \arguments{
-\item{dat}{A data frame containing species, coordinate, year,
-spatial-uncertainty, and identifier columns.}
+\item{dat}{A data frame containing species, coordinate,
+spatial-uncertainty, identifier, and exact-year and/or interval-bound
+columns.}
 
 \item{species}{Character string naming the species-identity column in
 \code{dat}.}
@@ -28,7 +30,8 @@ spatial-uncertainty, and identifier columns.}
 
 \item{y}{Character string naming the y-coordinate column in \code{dat}.}
 
-\item{year}{Character string naming the numeric year column in \code{dat}.}
+\item{year}{Character string naming the exact-year column, or \code{NULL} in
+interval mode without an exact-year fallback.}
 
 \item{spatialUncertainty}{Character string naming the spatial-uncertainty
 column in \code{dat}.}
@@ -47,6 +50,9 @@ latitude, or the corresponding linear units for projected coordinates.}
 \item{maxSpatUncertainty}{Optional single finite maximum spatial uncertainty.
 When supplied, records with missing uncertainty or uncertainty greater
 than this value are excluded from all three counts.}
+
+\item{dateHandling}{Optional uncertain-date configuration. \code{NULL} preserves
+exact-year assignment; see Details.}
 }
 \value{
 A list with \code{data} and \code{plot}. \code{data} contains one row for every
@@ -77,8 +83,9 @@ boundary belongs to the cell beginning at that boundary. The convention is
 shared across every identifier and period and supports negative,
 geographic, projected, and non-integer coordinates.
 
-Rows with missing or non-finite years and rows outside all requested
-periods are excluded before counting. Missing identifiers are not
+Temporal assignment follows the package-wide rules documented in the
+README, and every occurrence contributes to at most one period. Rows
+without an assigned period are excluded before counting. Missing identifiers are not
 permitted. Missing or non-finite coordinates and missing or blank species
 identities remain in \code{nRecords} but not \code{nEligibleRecords} or
 \code{nSpeciesCells}. Missing spatial uncertainty is retained when
@@ -113,6 +120,6 @@ result$data
 result$plot
 }
 \seealso{
-\code{\link[=assessRecordNumber]{assessRecordNumber()}}, \code{\link[=assessSpeciesNumber]{assessSpeciesNumber()}}, and
-\code{\link[=assessSpatialCov]{assessSpatialCov()}}.
+\code{\link[=assessRecordNumber]{assessRecordNumber()}}, \code{\link[=assessSpeciesNumber]{assessSpeciesNumber()}},
+\code{\link[=assessSpatialCov]{assessSpatialCov()}}, and \link{temporal-assignment}
 }

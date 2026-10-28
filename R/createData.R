@@ -7,10 +7,16 @@ createData <- function(data,
                        spatialUncertainty,
                        identifier) {
 
+  yearValues <- if (is.null(year)) {
+    rep(NA_real_, nrow(data))
+  } else {
+    dplyr::pull(data, year)
+  }
+
   dat <- data.frame(species = data[, species],
                     x = dplyr::pull(data, x),
                     y = dplyr::pull(data, y),
-                    year = dplyr::pull(data, year),
+                    year = yearValues,
                     spatialUncertainty = dplyr::pull(data, spatialUncertainty),
                     identifier = dplyr::pull(data, identifier))
 

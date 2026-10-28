@@ -17,12 +17,14 @@ assessEnvBias(
   backgroundEnvDat = NULL,
   xPC = 1,
   yPC = 2,
-  maxSpatUncertainty = NULL
+  maxSpatUncertainty = NULL,
+  dateHandling = NULL
 )
 }
 \arguments{
-\item{dat}{A data frame containing species, coordinate, year,
-spatial-uncertainty, and identifier columns.}
+\item{dat}{A data frame containing species, coordinate,
+spatial-uncertainty, identifier, and exact-year and/or interval-bound
+columns.}
 
 \item{species}{Character string. column name in dat giving species names.}
 
@@ -32,7 +34,8 @@ spatial-uncertainty, and identifier columns.}
 
 \item{spatialUncertainty}{String. Column name in dat giving uncertainty associated with x and y. Any units are permitted.}
 
-\item{year}{string. Column name in dat giving years.}
+\item{year}{Character string naming the exact-year column, or \code{NULL} in
+interval mode without an exact-year fallback.}
 
 \item{identifier}{String. Column name in dat giving record "identifiers". Identifiers are used to group the data; heuristics will be calculated separately for each group.}
 
@@ -51,6 +54,9 @@ its number of rows need not match \code{dat}.}
 \item{yPC}{Numeric. As xPC but for the y axis.}
 
 \item{maxSpatUncertainty}{Numeric. Maximum permitted spatial uncertainty. All records more uncertain than this value will be dropped. Units must match the units in your data.}
+
+\item{dateHandling}{Optional uncertain-date configuration. \code{NULL} preserves
+exact-year assignment; see Details.}
 }
 \value{
 A list with \code{data}, a data frame containing period, identifier,
@@ -63,11 +69,19 @@ environmental space and plots selected component pairs by period and
 identifier.
 }
 \details{
-Records with missing years, records outside \code{periods}, and rows
-with incomplete occurrence environmental data are omitted. If
+Records without an assigned period, records outside \code{periods},
+and rows with incomplete occurrence or environmental data are omitted. If
 \code{backgroundEnvDat} is supplied, one PCA is fitted to the background
 data and occurrence rows are projected onto it. Otherwise, a separate PCA
 is fitted to the retained occurrence environmental data for each identifier.
 Background scores are repeated in the returned data for each identifier so
 each plot facet has its own background reference.
+
+Temporal assignment is performed row-for-row before occurrence and
+environmental rows are filtered together. Each uncertain occurrence is
+allocated to at most one period, and temporal diagnostics are stored in the
+result's \code{temporalDiagnostics} attribute.
+}
+\seealso{
+\link{temporal-assignment}
 }

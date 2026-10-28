@@ -4,16 +4,18 @@
 #' spatial uncertainty is specified and plots the distributions of the specified
 #' uncertainty values by period.
 #'
-#' @param dat A data frame containing columns named `species`, `x`, `y`, `year`,
+#' @param dat A data frame containing columns named `species`, `x`, `y`, optionally `year`,
 #'   `spatialUncertainty`, and `identifier`. `identifier` must not contain missing
 #'   values. Missing `spatialUncertainty` values indicate that uncertainty was not
 #'   specified. The units of non-missing uncertainty values must be consistent,
 #'   but may be chosen by the user.
 #' @param periods A list of vectors defining the years in each time period. For
 #'   example, `list(1950:1990, 1991:2019)` defines two periods.
+#' @param dateHandling Optional uncertain-date configuration. When non-`NULL`,
+#'   start/end columns may replace `year`; see Details.
 #'
-#' @details Records with missing years are removed with a warning. Records whose
-#' years do not occur in `periods` are also excluded. For each identifier, the
+#' @details Records without an assigned period are excluded using the shared
+#' temporal rules documented in the README. For each identifier, the
 #' returned value is pooled across all selected periods and is calculated as the
 #' number of retained records with non-missing `spatialUncertainty` divided by
 #' the total number of retained records. Thus, records with missing uncertainty
@@ -27,42 +29,43 @@
 #' @return A list with two elements: `data`, a one-column numeric matrix named
 #'   `proportion_specified` with identifiers as row names and the supplied
 #'   `periods` stored as an attribute; and `plot`, a ggplot object containing the
-#'   period-grouped histograms and pooled annotations.
+#'   period-grouped histograms and pooled annotations. Temporal diagnostics are
+#'   stored in the result's `temporalDiagnostics` attribute.
+#' @seealso [temporal-assignment]
 #' @export
 
 
-assessSpatialUncertainty <- function(dat, periods) {
-  required <- c("species", "x", "y", "year", "spatialUncertainty", "identifier")
+assessSpatialUncertainty <- function(dat, periods, dateHandling = NULL) {
+  yearColumn <- if ("year" %in% names(dat)) "year" else NULL
+  required <- c(
+    "species", "x", "y", "spatialUncertainty", "identifier",
+    if (is.null(dateHandling)) "year"
+  )
 
   if (any(!(required %in% colnames(dat)))) {
-    stop("Data must include columns for species, x, y, year, spatialUncertainty and identifier")
+    stop("Data must include species, x, y, spatialUncertainty, identifier, and an exact year unless interval mode is used")
   }
+
+  temporal <- assignTemporalPeriods(dat, periods, yearColumn, dateHandling)
+  dat$Period <- temporal$period
+  dat$.temporalStatus <- temporal$status
   
   if (any(is.na(dat$identifier))) stop("One or more NAs in the identifier field. NAs are not permitted.")
   
-  if (any(is.na(dat$year))) {
-    nMissingYear <- sum(is.na(dat$year))
-    warning(sprintf(
+  selection <- .finalizeTemporalAssignment(
+    dat$Period, dat$.temporalStatus, periods, dateHandling,
+    exactMissingWarning = function(n) sprintf(
       "Removing %d %s because %s not have a year associated.",
-      nMissingYear,
-      if (nMissingYear == 1) "record" else "records",
-      if (nMissingYear == 1) "it does" else "they do"
-    ))
-
-    dat <- dat[!is.na(dat$year), , drop = FALSE]
-  }
-
-  dat <- dat[order(dat$year), ]
-
-  dat <- dat[dat$year %in% unlist(periods), , drop = FALSE]
-
+      n,
+      if (n == 1) "record" else "records",
+      if (n == 1) "it does" else "they do"
+    )
+  )
+  diagnostics <- selection$diagnostics
+  dat <- dat[selection$keep, , drop = FALSE]
   if (nrow(dat) == 0) stop("No records fall within the requested periods.")
-
-  dat$Period <- NA_character_
-
-  for (i in seq_along(periods)) {
-    dat$Period <- ifelse(dat$year %in% periods[[i]], paste0("p", i), dat$Period)
-  }
+  if (!is.null(yearColumn)) dat <- dat[order(dat[[yearColumn]]), , drop = FALSE]
+  dat$Period <- paste0("p", dat$Period)
 
   identifiers <- unique(dat$identifier)
   proportions <- vapply(identifiers, function(id) {
@@ -108,8 +111,9 @@ assessSpatialUncertainty <- function(dat, periods) {
       colour = "black"
     )
 
-  return(list(data = props,
-              plot = p))
+  return(.addTemporalDiagnostics(
+    list(data = props, plot = p), diagnostics
+  ))
 }
 
 

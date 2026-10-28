@@ -7,11 +7,14 @@
 #' samples contain the same number of points as the retained occurrence data,
 #' up to the number of available raster cells. Results are stochastic unless
 #' the caller sets the random-number seed.
-#' @param dat string. A data.frame containing columns for species name, x coordinates, y coordinates, spatialUncertainty, year and an identifier (used to group the data - heuristic will be calculated for each group). 
+#' @param dat A data frame containing species, coordinate,
+#'   spatial-uncertainty, identifier, and exact-year and/or interval-bound
+#'   columns.
 #' @param species Character string. column name in dat giving species names.
 #' @param x string. Column name in dat giving x coordinates. Any coordinate and spatial reference systems are permitted.
 #' @param y string. Column name in dat giving y coordinates. Any coordinate and spatial reference systems are permitted.
-#' @param year string. Column name in dat giving years.
+#' @param year Character string naming the exact-year column, or `NULL` in
+#'   interval mode without an exact-year fallback.
 #' @param spatialUncertainty String. Column name in dat giving uncertainty associated with x and y. Any units are permitted. 
 #' @param identifier String. Column name in dat giving record "identifiers". Identifiers are used to group the data; heuristics will be calculated separately for each group.
 #' @param periods Numeric. A list of time periods. For example, for two periods, the first spanning 1950 to 1990, and the second 1991 to 2019: periods = list(1950:1990, 1991:2019).
@@ -25,7 +28,12 @@
 #' @param degrade Logical. Whether or not to remove duplicated coordinates from the data. Coordinates are not considered to be duplicated if they are from
 #'        different \code{periods}.
 #' @param maxSpatUncertainty Numeric. Maximum permitted spatial uncertainty. All records more uncertain than this value will be dropped. Units must match the units in your data.
-#' @seealso \code{\link{assessSpatialCov}} which maps your data in geographical space.
+#' @param dateHandling Optional uncertain-date configuration. `NULL` preserves
+#'   exact-year assignment; see Details.
+#' @details Every occurrence is assigned to at most one period before optional
+#'   coordinate degradation. Temporal diagnostics are stored in the result's
+#'   `temporalDiagnostics` attribute.
+#' @seealso [assessSpatialCov()] and [temporal-assignment]
 #' @return A list with \code{data}, a data frame containing mean, 5th-percentile,
 #'   and 95th-percentile nearest-neighbour indices by period and identifier; and
 #'   \code{plot}, a ggplot object.
@@ -42,9 +50,13 @@ assessSpatialBias <- function(dat,
                               mask, 
                               nSamps = 50, 
                               degrade = TRUE, 
-                              maxSpatUncertainty = NULL) {
+                              maxSpatUncertainty = NULL,
+                              dateHandling = NULL) {
 
-  if (any(!(c(species, x, y, year, spatialUncertainty, identifier) %in% colnames(dat)))) stop("You have specified columns that don't exist in dat.")
+  required <- c(species, x, y, spatialUncertainty, identifier, year)
+  if (any(!(required %in% colnames(dat)))) stop("You have specified columns that don't exist in dat.")
+
+  temporal <- assignTemporalPeriods(dat, periods, year, dateHandling)
   
   dat <- createData(data = dat,
                     species,
@@ -53,6 +65,8 @@ assessSpatialBias <- function(dat,
                     year,
                     spatialUncertainty,
                     identifier)  
+  dat$Period <- temporal$period
+  dat$.temporalStatus <- temporal$status
   
   if (any(is.na(dat$identifier))) stop("One or more NAs in the identifier field. NAs are not permitted.")
   
@@ -77,23 +91,13 @@ assessSpatialBias <- function(dat,
     
   }
 
-  dat <- dat[order(dat$year), ]
-  
-  if (any(!dat$year %in% unlist(periods))) {
-    
-    drop <- which(!dat$year %in% unlist(periods))
-    
-    dat <- dat[-drop, ]
-    
-  }
-
-  dat$Period <- NA
-  
-  for (i in 1: length(periods)) {
-    
-    dat$Period <- ifelse(dat$year %in% periods[[i]], i, dat$Period)
-    
-  }
+  selection <- .finalizeTemporalAssignment(
+    dat$Period, dat$.temporalStatus, periods, dateHandling
+  )
+  diagnostics <- selection$diagnostics
+  dat <- dat[selection$keep, , drop = FALSE]
+  if (nrow(dat) == 0) stop("No records fall within the requested periods.")
+  dat <- dat[order(dat$year), , drop = FALSE]
 
 
 if (degrade == TRUE & any(duplicated(dat[, c("x", "y", "identifier", "Period")]))) {
@@ -102,9 +106,7 @@ if (degrade == TRUE & any(duplicated(dat[, c("x", "y", "identifier", "Period")])
 
 }
 
-  dat <- dat[order(dat$year), ]
-  
-  if (any(is.na(dat$year))) dat <- dat[-which(is.na(dat$year)), ]
+  dat <- dat[order(dat$year), , drop = FALSE]
 
   for (i in unique(dat$identifier)) {
 
@@ -198,8 +200,9 @@ if (degrade == TRUE & any(duplicated(dat[, c("x", "y", "identifier", "Period")])
     ggplot2::xlab("Period") +
     ggplot2::guides(colour = "none")
 
-  return(list(data = data, 
-              plot = p))
+  return(.addTemporalDiagnostics(
+    list(data = data, plot = p), diagnostics
+  ))
   
   
 }

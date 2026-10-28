@@ -2,20 +2,28 @@
 #'
 #' Calculates the proportion or count of records with a non-missing species
 #' value in each period and identifier group.
-#' @param dat A data frame containing species, coordinate, year,
-#'   spatial-uncertainty, and identifier columns.
+#' @param dat A data frame containing species, coordinate,
+#'   spatial-uncertainty, identifier, and exact-year and/or interval-bound
+#'   columns.
 #' @param species Character string. column name in dat giving species names.
 #' @param x string. Column name in dat giving x coordinates. Any coordinate and spatial reference systems are permitted.
 #' @param y string. Column name in dat giving y coordinates. Any coordinate and spatial reference systems are permitted.
-#' @param year string. Column name in dat giving years.
+#' @param year Character string naming the exact-year column, or `NULL` in
+#'   interval mode without an exact-year fallback.
 #' @param spatialUncertainty String. Column name in dat giving uncertainty associated with x and y. Any units are permitted. 
 #' @param identifier String. Column name in dat giving record "identifiers". Identifiers are used to group the data; heuristics will be calculated separately for each group.
 #' @param periods String. A list of time periods. For example, for two periods, the first spanning 1950 to 1990, and the second 1991 to 2019: periods = list(1950:1990, 1991:2019).
 #' @param type Character string: \code{"proportion"} or \code{"count"}.
 #' @param maxSpatUncertainty Numeric. Maximum permitted spatial uncertainty. All records more uncertain than this value will be dropped. Units must match the units in your data.
+#' @param dateHandling Optional uncertain-date configuration. `NULL` preserves
+#'   exact-year assignment; see Details.
+#' @details In interval mode, `dateHandling` names start/end columns and the
+#'   allocation rules documented in the README. Diagnostics are stored in the
+#'   result's `temporalDiagnostics` attribute.
 #' @return A list with \code{data}, a data frame containing \code{prop},
 #'   \code{group}, and \code{Period}; and \code{plot}, a ggplot object. The
 #'   \code{prop} column contains proportions or counts according to \code{type}.
+#' @seealso [temporal-assignment]
 #' @export
 
 assessSpeciesID <- function(dat, 
@@ -27,9 +35,13 @@ assessSpeciesID <- function(dat,
                             identifier,
                             periods,
                             type,
-                            maxSpatUncertainty = NULL) {
+                            maxSpatUncertainty = NULL,
+                            dateHandling = NULL) {
 
-  if (any(!(c(species, x, y, year, spatialUncertainty, identifier) %in% colnames(dat)))) stop("You have specified columns that don't exist in dat.")
+  required <- c(species, x, y, spatialUncertainty, identifier, year)
+  if (any(!(required %in% colnames(dat)))) stop("You have specified columns that don't exist in dat.")
+
+  temporal <- assignTemporalPeriods(dat, periods, year, dateHandling)
   
   dat <- createData(data = dat,
                     species,
@@ -38,6 +50,8 @@ assessSpeciesID <- function(dat,
                     year,
                     spatialUncertainty,
                     identifier)
+  dat$Period <- temporal$period
+  dat$.temporalStatus <- temporal$status
   
   if (any(is.na(dat$identifier))) stop("One or more NAs in the identifier field. NAs are not permitted.")
   
@@ -45,31 +59,13 @@ assessSpeciesID <- function(dat,
   
   if (nrow(dat) == 0) stop("No records with with spatialUncertainty < maxSpatUncertainty")
   
-  dat <- dat[order(dat$year), ]
-  
-  if (any(!dat$year %in% unlist(periods))) {
-    
-    drop <- which(!dat$year %in% unlist(periods))
-    
-    dat <- dat[-drop, ]
-    
-  }
-  
-  dat$Period <- NA
-
-  for (i in 1: length(periods)) {
-
-    dat$Period <- ifelse(dat$year %in% periods[[i]], i, dat$Period)
-
-  }
-  
-  if (any(is.na(dat$year))) {
-
-    warning(paste0("Removing", nrow(dat[is.na(dat$year), ]), "records because they are do not have a year associated."))
-
-    dat <- dat[-which(is.na(dat$year)), ]
-
-  }
+  selection <- .finalizeTemporalAssignment(
+    dat$Period, dat$.temporalStatus, periods, dateHandling
+  )
+  diagnostics <- selection$diagnostics
+  dat <- dat[selection$keep, , drop = FALSE]
+  if (nrow(dat) == 0) stop("No records fall within the requested periods.")
+  dat <- dat[order(dat$year), , drop = FALSE]
 
   groups <- unique(dat$identifier)
 
@@ -122,8 +118,9 @@ assessSpeciesID <- function(dat,
     ggplot2::xlab("Period")
     ggplot2::labs(colour = "")
 
-  return(list(data = data,
-                plot = p))
+  return(.addTemporalDiagnostics(
+    list(data = data, plot = p), diagnostics
+  ))
 
 
 }

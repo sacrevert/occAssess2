@@ -59,6 +59,11 @@ In this example, we will specify five periods over 2001 to 2010
 periods <- list(2001:2002, 2003:2004, 2005:2006, 2007:2008, 2009:2010)
 ```
 
+This historical simulation uses precisely specified years. Current
+period-based functions also accept uncertain date bounds through
+`dateHandling`; the reproducible vignette documents and demonstrates the
+available allocation strategies.
+
 ### Functions
 
 All of the functions in occAssess require two common arguments: dat and periods (outlined above). I will run through each function in the following, indicating where additional arguments are required. Generally, the functions in occAssess return a list with two elements: one being a ggplot2 object, with a separate panel or feature for each level of identifier; and a second with the data underpinning the plot.

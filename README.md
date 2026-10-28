@@ -109,6 +109,67 @@ Both functions return a list containing the numerical result in
 <code>Period</code> refers to the position of the corresponding vector in
 <code>periods</code>.
 
+## Temporally uncertain records
+
+All period-based assessment functions accept the same optional
+`dateHandling` list. With `dateHandling = NULL` (the default), the existing
+exact-year workflow is unchanged. In interval mode, `start` and `end` name
+columns containing the earliest and latest possible observation dates. These
+may be numeric years, `Date` values, four-digit year strings, or ISO dates such
+as `"2005-06-14"`. The exact `year` is used only when both bounds are missing;
+a supplied interval takes precedence over a potentially conflicting year.
+
+An interval wholly contained in one period is assigned automatically. Other
+bounded intervals use `ambiguous = "drop"` (default), `"start"`, `"end"`, or
+`"maxOverlap"`. Maximum overlap counts calendar years for year-only bounds and
+inclusive days for full dates, using the actual years listed in each period.
+Ties default to `ties = "drop"`, with `"earliest"` and `"latest"` available.
+End-only records default to dropping but can use `endOnly = "earliest"`;
+start-only records can use `startOnly = "latest"`. Chronological choices do not
+depend on the order of the `periods` list.
+
+```r
+uncertain <- data.frame(
+  species = rep("A", 5),
+  x = 1:5,
+  y = 1:5,
+  year = c(1995, NA, NA, NA, NA),
+  startDate = c(NA, "2002", "1999", NA, "2005-06-14"),
+  endDate = c(NA, "2007", "2003", "2005", "2005-06-14"),
+  spatialUncertainty = 0,
+  identifier = "survey"
+)
+periods <- list(1990:1999, 2000:2009)
+
+drop_result <- suppressWarnings(assessRecordNumber(
+  uncertain, "species", "x", "y", "year", "spatialUncertainty",
+  "identifier", periods,
+  dateHandling = list(start = "startDate", end = "endDate")
+))
+
+overlap_result <- suppressWarnings(assessRecordNumber(
+  uncertain, "species", "x", "y", "year", "spatialUncertainty",
+  "identifier", periods,
+  dateHandling = list(
+    start = "startDate", end = "endDate",
+    ambiguous = "maxOverlap", endOnly = "earliest"
+  )
+))
+
+drop_result$data       # crossing and end-only records are dropped
+overlap_result$data    # each is allocated to one period
+attr(overlap_result, "temporalDiagnostics")
+```
+
+The bounds express uncertainty about one observation; they do not imply that
+the organism was observed continuously. The package never copies a record into
+multiple periods, estimates its true date, or applies fractional weights.
+Allocation rules are analyst assumptions and can alter apparent trends,
+especially when uncertain records are preferentially assigned earlier or
+later. See `?temporal-assignment` for the formal rules and diagnostics. Darwin
+Core `eventDate` intervals should first be split into start and end columns;
+complete Darwin Core interval parsing is not claimed.
+
 ## What can the package assess?
 
 - <code>assessRecordNumber()</code>: number of occurrence records per period.
