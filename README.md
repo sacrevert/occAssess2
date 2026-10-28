@@ -5,7 +5,7 @@
 <code>occAssess</code> screens species-occurrence data for common forms of
 temporal, taxonomic, spatial, and environmental bias. The GitHub repository is
 named **occAssess2**, but the installed R package and the name used with
-<code>library()</code> are both **occAssess**.
+<code>library()</code> are both **occAssess**. The original package is described in this [journal paper](https://onlinelibrary.wiley.com/doi/10.1002/ece3.8299).
 
 ## Installation
 
