@@ -4,33 +4,110 @@
 \alias{assessBias1D}
 \title{Compare one-dimensional sample and population distributions}
 \usage{
-assessBias1D(pop, R, x, weights = NULL, breaks, RNames, WNames = NULL)
+assessBias1D(
+  pop,
+  R,
+  x,
+  weights = NULL,
+  breaks,
+  RNames,
+  WNames = NULL,
+  returnMetrics = FALSE
+)
 }
 \arguments{
-\item{pop}{string. A data.frame with one row for every spatial unit in the population (i.e. the geographic domain) and several columns. At least one column must be a binary variable (1 or 0) taking the value 1 if
-a spatial unit is in the sample and 0 otherwise. More than one column can contain information on sample inclusion if, say, there are multiple time-periods (see R).}
+\item{pop}{A data frame with one row for every spatial unit in the reference
+population. It must contain the focal variable and one or more
+sample-inclusion columns.}
 
-\item{R}{String. Name(s) of the column(s) in pop that indicate whether each unit was included in the sample. If length(R) >1, then several sets of outputs will be provided, one for each R.}
+\item{R}{Character vector naming columns in \code{pop} that indicate sample
+inclusion. Values must be \code{0}, \code{1}, or \code{NA}; only \code{1} denotes inclusion.}
 
-\item{x}{String. Name of the column in pop with the variable whose distributions will be assessed.}
+\item{x}{Character string naming the numeric variable whose distribution is
+assessed.}
 
-\item{weights}{Numeric vector or list of numeric vectors. One or more sets of weights whose lengths equal the number of rows in pop. Each weight should should correspond to the matching row of pop. Weights can be calculated using e.g. poststratification,
-superpopulation modelling, etc. (Boyd et al. 2023).}
+\item{weights}{Optional weights. The documented and preferred format is one
+numeric vector of length \code{nrow(pop)}, or a list of such vectors, aligned to
+population rows. For compatibility, a list of weighting schemes may
+instead contain one list per scheme, with one sample-aligned numeric vector
+per element of \code{R}; each inner vector must have the length of that
+indicator's included rows before missing \code{x} values are removed. Mixing or
+ambiguously nesting these formats is an error.}
 
-\item{breaks}{Numeric. \code{assessBias1D} calculates a relative frequency distribution of x in the sample and population, and breaks is the number of bins into which the distributions will be split.}
+\item{breaks}{Either one positive integer giving the number of bins or a
+strictly increasing finite numeric vector of explicit bin boundaries.
+Explicit boundaries must cover every finite population value of \code{x}.}
 
-\item{RNames}{Character vector naming the sample-inclusion variables in
-\code{R}. Supply one name per element of \code{R}.}
+\item{RNames}{Unique, non-missing character labels for the sample-inclusion
+columns, with one label per element of \code{R}.}
 
-\item{WNames}{String or character vector. Name of each set of weights. One name per set (this will often be 1). Used for plots and other outputs.}
+\item{WNames}{Unique, non-missing character labels for weighting schemes,
+with one label per scheme. Required when \code{weights} is supplied.}
+
+\item{returnMetrics}{Logical. If \code{FALSE} (the default), preserve the
+established \code{list(plot = ..., data = ...)} result. If \code{TRUE}, append a
+\code{metrics} data frame.}
 }
 \value{
-A list with \code{plot}, a ggplot object showing relative-frequency
-distributions, and \code{data}, the underlying long-format data frame.
+A list containing \code{plot}, the established ggplot relative-frequency
+display, and \code{data}, its long-format data frame with every bin represented.
+When \code{returnMetrics = TRUE}, the list also contains \code{metrics}, with one
+unweighted row per sampling indicator and one weighted row per indicator
+and weighting scheme. Its columns are \code{id}, \code{comparison}, \code{weightType},
+\code{totalVariation}, \code{meanAbsoluteError}, \code{nBins}, \code{nPopulation}, \code{nSample},
+and \code{status}. An empty or entirely unusable sample has \code{NA} discrepancies
+and status \code{no_eligible_sample}; the function never reports it as a zero
+discrepancy.
 }
 \description{
-This function compares the distribution of some variable in the sample to its distribution in the population (i.e. the whole geographic domain). If a set of weights are provided, it also compares the weighted
-distribution in the sample to the distribution in the population. Multiple sets of weights can be supplied, in which case the function will produce several plots datasets, each pertaining to one set. The idea
-is that a sample is representative, at least in terms of the focal variable, if the sample and population distributions are similar. If the weighted sample distribution is closer than the raw sample distribution
-to the populaiton distribution, then weighting was successful. Note that the data must be provided in a different format for this function than the others.
+Compares binned relative-frequency distributions for a reference population,
+one or more samples, and optionally weighted versions of those samples. When
+requested, total variation distance and mean absolute error quantify each
+sample-to-population comparison.
+}
+\details{
+Bin boundaries are defined once from the finite population values
+of \code{x}, using \code{\link[=cut]{cut()}} with right-closed intervals and \code{include.lowest = TRUE},
+and then shared by every sample and weighting scheme. All bins are retained,
+including bins with zero observations. Missing and non-finite \code{x} values are
+excluded consistently from population, sample, and weighted denominators.
+Missing sample-inclusion values are not sampled; other values besides zero
+and one are rejected.
+
+For population proportions \eqn{q_k} and sample proportions \eqn{p_k} over
+\eqn{K} common bins, total variation distance is
+\deqn{TV = 0.5 \sum_k |p_k - q_k|}
+and mean absolute error is
+\deqn{MAE = K^{-1} \sum_k |p_k - q_k|.}
+Consequently, \eqn{MAE = 2 TV / K}; these are two presentations of the same
+binned discrepancies, not independent measures. TV ranges from zero for
+identical distributions to one for disjoint binned support. Both measures
+use proportions rather than raw spatial-unit counts.
+
+Weights are applied only after selecting the relevant sample. They must be
+finite and non-negative; zero individual weights are allowed, but eligible
+sampled observations must have positive total weight. Weighted bin totals
+are divided by that total and never alter the reference-population
+distribution.
+
+A smaller weighted discrepancy means improved agreement for this reference,
+variable, and binning scheme only. Weighting can also increase discrepancy.
+Neither outcome establishes representativeness for other variables,
+geographical domains, or biological responses. TV measures a difference
+between discrete binned distributions, not continuous densities. Changing
+bin boundaries or bin count can change TV, while MAE additionally changes
+mechanically through its \eqn{1/K} factor. The metrics are descriptive, not
+formal tests or universal estimates of sampling bias.
+}
+\examples{
+population <- data.frame(
+  environment = c(1, 1, 2, 2, 3, 3, 4, 4),
+  sampled = c(1, 0, 1, 0, 0, 0, 1, 0)
+)
+result <- assessBias1D(
+  population, R = "sampled", x = "environment", breaks = 4,
+  RNames = "survey", returnMetrics = TRUE
+)
+result$metrics
+
 }
