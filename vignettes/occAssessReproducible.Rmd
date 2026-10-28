@@ -388,3 +388,65 @@ envBias$plot
 ```
 
 The arguments yPC and xPC indicate which principal components you would like on the y and x axes, respectively. 
+
+#### assessEnvCoverage
+
+<code>assessEnvCoverage()</code> complements the PCA display above by fitting a
+kernel density to each period's occurrence environments in one common
+background-based, standardised PCA space. For each probability-mass
+highest-density region (HDR), it reports the proportion of the supplied
+reference observations inside the fitted region. The following compact example
+uses a broad environmental sample in the first period and a more restricted
+sample in the second.
+
+```{r environmental-coverage}
+coverageBackground <- expand.grid(
+  temperature = seq(-2, 2, length.out = 9),
+  rainfall = seq(-2, 2, length.out = 9)
+)
+
+broadRows <- c(1, 5, 9, 19, 25, 33, 41, 49, 57, 65, 73, 77, 81)
+restrictedRows <- c(31, 32, 33, 40, 41, 42, 49, 50, 51, 39, 43, 30, 52)
+coverageEnv <- coverageBackground[c(broadRows, restrictedRows), ]
+coverageDat <- data.frame(
+  species = "example species",
+  x = seq_len(nrow(coverageEnv)),
+  y = seq_len(nrow(coverageEnv)),
+  year = rep(c(2001, 2003), each = length(broadRows)),
+  spatialUncertainty = 0,
+  identifier = "survey"
+)
+
+envCoverage <- assessEnvCoverage(
+  dat = coverageDat,
+  species = "species", x = "x", y = "y", year = "year",
+  spatialUncertainty = "spatialUncertainty", identifier = "identifier",
+  periods = list(2001:2002, 2003:2004),
+  envDat = coverageEnv,
+  backgroundEnvDat = coverageBackground,
+  hdrProbs = c(0.50, 0.80, 0.95),
+  bandwidth = diag(c(0.30, 0.30)),
+  gridSize = 101
+)
+
+envCoverage$data[, c("period", "hdrProbability", "backgroundCoverage",
+                     "nSample", "status")]
+envCoverage$plot
+```
+
+The fixed bandwidth makes this small demonstration exactly reproducible; when
+it is omitted, one plug-in bandwidth is estimated from all retained occurrence
+scores and reused across periods. HDR levels are probability masses under the
+sample KDE, not percentages of its maximum height. Multiple rows at the same
+location or sampling unit influence the KDE, so any scientifically justified
+aggregation should be performed before the function is called.
+
+Coverage is conditional on how the reference environment was sampled and on
+the bandwidth, sample size, selected PCA axes, and sampling unit. Uniform
+longitude-latitude raster cells do not necessarily represent equal land area,
+and two PCA axes need not capture all environmental differences. High coverage
+therefore does not establish unbiased sampling, while low coverage is not by
+itself evidence of a causal selection process. This implementation adapts the
+KDE/HDR environmental-coverage idea explored in
+[npmsEnvBiasChecks](https://github.com/sacrevert/npmsEnvBiasChecks) without its
+project-specific clustering or data dependencies.

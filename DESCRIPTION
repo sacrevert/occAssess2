@@ -29,6 +29,7 @@ Imports:
     rasterVis,
     reshape2,
     dplyr,
+    ks,
     maps
 Suggests: 
     knitr,
