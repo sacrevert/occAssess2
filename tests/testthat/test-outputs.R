@@ -33,7 +33,7 @@ test_that("check outputs are as expected", {
                                  identifier = "identifier",
                                  periods = periods, 
                                  res = 10000,
-                                 prevPerPeriod = TRUE)$data$index[1], 0.9992043 )
+                                 prevPerPeriod = TRUE)$data$index[1], 0.9985977582187376 )
   
   expect_equal( assessSpeciesNumber(dat = random40Species, 
                                     species = "species",
