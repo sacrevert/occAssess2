@@ -37,3 +37,5 @@ Suggests:
 Depends:
     R(>= 4.0)
 VignetteBuilder: knitr
+URL: https://github.com/sacrevert/occAssess2
+BugReports: https://github.com/sacrevert/occAssess2/issues
