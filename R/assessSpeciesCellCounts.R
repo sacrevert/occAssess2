@@ -3,13 +3,15 @@
 #' Summarises raw occurrence-record volume and the number of distinct
 #' species-grid-cell combinations for each identifier and user-supplied period.
 #'
-#' @param dat A data frame containing species, coordinate, year,
-#'   spatial-uncertainty, and identifier columns.
+#' @param dat A data frame containing species, coordinate,
+#'   spatial-uncertainty, identifier, and exact-year and/or interval-bound
+#'   columns.
 #' @param species Character string naming the species-identity column in
 #'   `dat`.
 #' @param x Character string naming the x-coordinate column in `dat`.
 #' @param y Character string naming the y-coordinate column in `dat`.
-#' @param year Character string naming the numeric year column in `dat`.
+#' @param year Character string naming the exact-year column, or `NULL` in
+#'   interval mode without an exact-year fallback.
 #' @param spatialUncertainty Character string naming the spatial-uncertainty
 #'   column in `dat`.
 #' @param identifier Character string naming the grouping column in `dat`.
@@ -23,6 +25,8 @@
 #' @param maxSpatUncertainty Optional single finite maximum spatial uncertainty.
 #'   When supplied, records with missing uncertainty or uncertainty greater
 #'   than this value are excluded from all three counts.
+#' @param dateHandling Optional uncertain-date configuration. `NULL` preserves
+#'   exact-year assignment; see Details.
 #'
 #' @details For each identifier-period combination, `nRecords` is the number of
 #'   rows remaining after period selection and optional spatial-uncertainty
@@ -40,8 +44,9 @@
 #'   shared across every identifier and period and supports negative,
 #'   geographic, projected, and non-integer coordinates.
 #'
-#'   Rows with missing or non-finite years and rows outside all requested
-#'   periods are excluded before counting. Missing identifiers are not
+#'   Temporal assignment follows the package-wide rules documented in the
+#'   README, and every occurrence contributes to at most one period. Rows
+#'   without an assigned period are excluded before counting. Missing identifiers are not
 #'   permitted. Missing or non-finite coordinates and missing or blank species
 #'   identities remain in `nRecords` but not `nEligibleRecords` or
 #'   `nSpeciesCells`. Missing spatial uncertainty is retained when
@@ -64,8 +69,8 @@
 #'   the position of the period in `periods`. `plot` is a ggplot object comparing
 #'   raw record and species-cell counts; eligible-record counts remain available
 #'   in `data` but are not plotted.
-#' @seealso [assessRecordNumber()], [assessSpeciesNumber()], and
-#'   [assessSpatialCov()].
+#' @seealso [assessRecordNumber()], [assessSpeciesNumber()],
+#'   [assessSpatialCov()], and [temporal-assignment]
 #' @examples
 #' records <- data.frame(
 #'   taxon = c("A", "A", "B", "A", NA),
@@ -92,31 +97,16 @@ assessSpeciesCellCounts <- function(dat,
                                     identifier,
                                     periods,
                                     res,
-                                    maxSpatUncertainty = NULL) {
-  required <- c(species, x, y, year, spatialUncertainty, identifier)
+                                    maxSpatUncertainty = NULL,
+                                    dateHandling = NULL) {
+  required <- c(species, x, y, spatialUncertainty, identifier, year)
   if (any(!(required %in% colnames(dat)))) {
     stop("You have specified columns that do not exist in dat.")
   }
+  temporal <- assignTemporalPeriods(dat, periods, year, dateHandling)
   if (!is.numeric(res) || length(res) != 1 || is.na(res) ||
       !is.finite(res) || res <= 0) {
     stop("res must be a single positive, finite number.")
-  }
-  if (!is.list(periods) || length(periods) == 0) {
-    stop("periods must be a non-empty list of numeric year vectors.")
-  }
-  validPeriods <- vapply(
-    periods,
-    function(period) {
-      is.numeric(period) && length(period) > 0 &&
-        all(is.finite(period)) && !anyDuplicated(period)
-    },
-    logical(1)
-  )
-  if (!all(validPeriods)) {
-    stop("Each period must be a non-empty finite numeric vector without duplicate years.")
-  }
-  if (anyDuplicated(unlist(periods, use.names = FALSE))) {
-    stop("Periods must not overlap.")
   }
   if (!is.null(maxSpatUncertainty) &&
       (!is.numeric(maxSpatUncertainty) ||
@@ -128,11 +118,13 @@ assessSpeciesCellCounts <- function(dat,
   dat <- createData(
     data = dat, species, x, y, year, spatialUncertainty, identifier
   )
+  dat$Period <- temporal$period
+  dat$.temporalStatus <- temporal$status
   if (nrow(dat) == 0) {
     stop("dat contains no records.")
   }
-  if (!is.numeric(dat$x) || !is.numeric(dat$y) || !is.numeric(dat$year)) {
-    stop("Coordinate and year columns must be numeric.")
+  if (!is.numeric(dat$x) || !is.numeric(dat$y)) {
+    stop("Coordinate columns must be numeric.")
   }
   if (any(is.na(dat$identifier))) {
     stop("Missing values are not permitted in identifier.")
@@ -151,23 +143,15 @@ assessSpeciesCellCounts <- function(dat,
     stop("No records remain after spatial-uncertainty filtering.")
   }
 
-  invalidYear <- !is.finite(dat$year)
-  if (any(invalidYear)) {
-    warning(sprintf(
+  selection <- .finalizeTemporalAssignment(
+    dat$Period, dat$.temporalStatus, periods, dateHandling,
+    exactMissingWarning = function(n) sprintf(
       "Removing %d record%s with a missing or non-finite year.",
-      sum(invalidYear),
-      if (sum(invalidYear) == 1) "" else "s"
-    ))
-    dat <- dat[!invalidYear, , drop = FALSE]
-  }
-
-  periodIndex <- rep(NA_integer_, nrow(dat))
-  for (period in seq_along(periods)) {
-    periodIndex[dat$year %in% periods[[period]]] <- period
-  }
-  retained <- !is.na(periodIndex)
-  dat <- dat[retained, , drop = FALSE]
-  periodIndex <- periodIndex[retained]
+      n, if (n == 1) "" else "s"
+    )
+  )
+  diagnostics <- selection$diagnostics
+  dat <- dat[selection$keep, , drop = FALSE]
   if (nrow(dat) == 0) {
     stop("No records fall within the requested periods.")
   }
@@ -175,7 +159,7 @@ assessSpeciesCellCounts <- function(dat,
   identifiers <- unique(dat$identifier)
   identifierIndex <- match(dat$identifier, identifiers)
   nPeriods <- length(periods)
-  groupIndex <- (identifierIndex - 1L) * nPeriods + periodIndex
+  groupIndex <- (identifierIndex - 1L) * nPeriods + dat$Period
   nGroups <- length(identifiers) * nPeriods
 
   usableSpecies <- !is.na(dat$species)
@@ -240,5 +224,7 @@ assessSpeciesCellCounts <- function(dat,
       linetype = "Measure", shape = "Measure"
     )
 
-  list(data = resultData, plot = p)
+  .addTemporalDiagnostics(
+    list(data = resultData, plot = p), diagnostics
+  )
 }

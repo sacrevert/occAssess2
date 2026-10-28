@@ -3,12 +3,14 @@
 #' Uses principal component analysis (PCA) to represent occurrence records in
 #' environmental space and plots selected component pairs by period and
 #' identifier.
-#' @param dat A data frame containing species, coordinate, year,
-#'   spatial-uncertainty, and identifier columns.
+#' @param dat A data frame containing species, coordinate,
+#'   spatial-uncertainty, identifier, and exact-year and/or interval-bound
+#'   columns.
 #' @param species Character string. column name in dat giving species names.
 #' @param x string. Column name in dat giving x coordinates. Any coordinate and spatial reference systems are permitted.
 #' @param y string. Column name in dat giving y coordinates. Any coordinate and spatial reference systems are permitted.
-#' @param year string. Column name in dat giving years.
+#' @param year Character string naming the exact-year column, or `NULL` in
+#'   interval mode without an exact-year fallback.
 #' @param spatialUncertainty String. Column name in dat giving uncertainty associated with x and y. Any units are permitted. 
 #' @param identifier String. Column name in dat giving record "identifiers". Identifiers are used to group the data; heuristics will be calculated separately for each group.
 #' @param periods String. A list of time periods. For example, for two periods, the first spanning 1950 to 1990, and the second 1991 to 2019: periods = list(1950:1990, 1991:2019).
@@ -21,16 +23,24 @@
 #' @param xPC Numeric. Which principal component to use as the x axis.
 #' @param yPC Numeric. As xPC but for the y axis. 
 #' @param maxSpatUncertainty Numeric. Maximum permitted spatial uncertainty. All records more uncertain than this value will be dropped. Units must match the units in your data.
-#' @details Records with missing years, records outside \code{periods}, and rows
-#'   with incomplete occurrence environmental data are omitted. If
+#' @param dateHandling Optional uncertain-date configuration. `NULL` preserves
+#'   exact-year assignment; see Details.
+#' @details Records without an assigned period, records outside \code{periods},
+#'   and rows with incomplete occurrence or environmental data are omitted. If
 #'   \code{backgroundEnvDat} is supplied, one PCA is fitted to the background
 #'   data and occurrence rows are projected onto it. Otherwise, a separate PCA
 #'   is fitted to the retained occurrence environmental data for each identifier.
 #'   Background scores are repeated in the returned data for each identifier so
 #'   each plot facet has its own background reference.
+#'
+#'   Temporal assignment is performed row-for-row before occurrence and
+#'   environmental rows are filtered together. Each uncertain occurrence is
+#'   allocated to at most one period, and temporal diagnostics are stored in the
+#'   result's `temporalDiagnostics` attribute.
 #' @return A list with \code{data}, a data frame containing period, identifier,
 #'   PCA scores, and percentages of variance explained by the selected axes; and
 #'   \code{plot}, a ggplot object.
+#' @seealso [temporal-assignment]
 #' @export
 
 assessEnvBias <- function(dat,
@@ -45,9 +55,13 @@ assessEnvBias <- function(dat,
                           backgroundEnvDat = NULL,
                           xPC = 1,
                           yPC = 2, 
-                          maxSpatUncertainty = NULL) {
+                          maxSpatUncertainty = NULL,
+                          dateHandling = NULL) {
   
-  if (any(!(c(species, x, y, year, spatialUncertainty, identifier) %in% colnames(dat)))) stop("You have specified columns that don't exist in dat.")
+  required <- c(species, x, y, spatialUncertainty, identifier, year)
+  if (any(!(required %in% colnames(dat)))) stop("You have specified columns that don't exist in dat.")
+
+  temporal <- assignTemporalPeriods(dat, periods, year, dateHandling)
   
   dat <- createData(data = dat,
                     species,
@@ -56,6 +70,8 @@ assessEnvBias <- function(dat,
                     year,
                     spatialUncertainty,
                     identifier)
+  dat$Period <- temporal$period
+  dat$.temporalStatus <- temporal$status
   
   if (any(is.na(dat$identifier))) stop("One or more NAs in the identifier field. NAs are not permitted.")
   
@@ -77,34 +93,18 @@ assessEnvBias <- function(dat,
   
   envCols <- ((ncol(dat) - ncol(envDat)) + 1):ncol(dat)
   
-  if (any(is.na(dat$year))) {
-    
-    warning("Removing data without a specified year")
-    
-    dat <- dat[-which(is.na(dat$year)), ]
-    
-  }
-  
   completeEnv <- stats::complete.cases(dat[, envCols, drop = FALSE])
   if (any(!completeEnv)) dat <- dat[completeEnv, , drop = FALSE]
-  
-  dat <- dat[order(dat$year), ]
-  
-  if (any(!dat$year %in% unlist(periods))) {
-    
-    drop <- which(!dat$year %in% unlist(periods))
-    
-    dat <- dat[-drop, ]
-    
-  }
-  
-  dat$Period <- NA
-  
-  for (i in 1: length(periods)) {
-    
-    dat$Period <- ifelse(dat$year %in% periods[[i]], paste0("p", i), dat$Period)
-    
-  }
+
+  selection <- .finalizeTemporalAssignment(
+    dat$Period, dat$.temporalStatus, periods, dateHandling,
+    exactMissingWarning = "Removing data without a specified year"
+  )
+  diagnostics <- selection$diagnostics
+  dat <- dat[selection$keep, , drop = FALSE]
+  if (nrow(dat) == 0) stop("No records fall within the requested periods.")
+  dat <- dat[order(dat$year), , drop = FALSE]
+  dat$Period <- paste0("p", dat$Period)
   
   if (is.null(backgroundEnvDat)) {
     
@@ -160,8 +160,9 @@ assessEnvBias <- function(dat,
            ggplot2::theme_linedraw()
   
   
-  return(list(data = plotDat,
-              plot = p))
+  return(.addTemporalDiagnostics(
+    list(data = plotDat, plot = p), diagnostics
+  ))
   
 }
 
