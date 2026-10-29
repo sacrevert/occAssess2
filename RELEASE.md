@@ -4,18 +4,18 @@ The release-preparation pull request must be reviewed and merged before any of
 these publication actions. Do not tag a branch commit that has not passed the
 required checks.
 
-- [ ] Review and merge the `Prepare occAssess 1.4.0 release` pull request into
+- [x] Review and merge the `Prepare occAssess 1.4.0 release` pull request into
       `master`.
-- [ ] On the resulting `master` commit, confirm that `DESCRIPTION` contains
+- [x] On the resulting `master` commit, confirm that `DESCRIPTION` contains
       `Package: occAssess` and `Version: 1.4.0`.
-- [ ] Confirm that all required GitHub Actions jobs pass on that exact final
+- [x] Confirm that all required GitHub Actions jobs pass on that exact final
       commit: macOS release, Windows release, Ubuntu release, Ubuntu R-devel and
       Ubuntu oldrel-1.
-- [ ] Review `NEWS.md`, `inst/CITATION`, `CITATION.cff`, and the paper DOI
+- [x] Review `NEWS.md`, `inst/CITATION`, `CITATION.cff`, and the paper DOI
       <https://doi.org/10.1002/ece3.8299>.
-- [ ] Create an annotated tag named `v1.4.0` pointing to the validated release
+- [x] Create an annotated tag named `v1.4.0` pointing to the validated release
       commit, then push that tag. Do not move the tag after publication.
-- [ ] Publish a GitHub release titled `occAssess 1.4.0`, using the `NEWS.md`
+- [x] Publish a GitHub release titled `occAssess 1.4.0`, using the `NEWS.md`
       1.4.0 section as the basis of the release description.
 - [ ] Verify the published tag and a clean tagged installation:
       `remotes::install_github("sacrevert/occAssess2", ref = "v1.4.0",
