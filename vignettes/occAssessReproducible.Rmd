@@ -22,7 +22,8 @@ library(occAssess)
 This vignette demonstrates the main occurrence-data functions in
 <code>occAssess</code> using only datasets distributed with the package. It is
 executed when the package vignettes are built and requires no downloads or
-local files.
+local files. The package's original methods and scientific context are described
+by [Boyd et al. (2021)](https://doi.org/10.1002/ece3.8299).
 
 ### Occurrence data 
 

@@ -1,24 +1,28 @@
-## Current check results (2026-10-27)
+## Release-candidate check results (2026-10-29)
 
 Local environment:
 
-- Debian GNU/Linux 13
+- Ubuntu 22.04.5 LTS
 - R 4.6.1 (R-devel, 2026-06-24)
 
 Results:
 
 - `R CMD build`: passed, including all three vignettes.
-- `R CMD check --as-cran`: 0 ERRORs, 0 WARNINGs, 1 NOTE.
-- Complete testthat suite: 180 expectations passed.
+- `R CMD check --as-cran`: 0 ERRORs, 0 WARNINGs, 1 NOTE with the CRAN incoming
+  service enabled. All package, example, test, vignette, PDF-manual and
+  HTML-manual checks passed.
+- Complete testthat suite: 461 expectations passed.
+- Installation of the built source package into a clean library: passed.
+- Package loading, the README example, all three installed vignettes,
+  `citation("occAssess")`, and `toBibtex(citation("occAssess"))`: passed.
 
-The remaining NOTE is:
+The single NOTE is expected for an initial CRAN submission:
 
-1. CRAN incoming feasibility reports this as a new submission.
+1. CRAN incoming feasibility identifies `occAssess` as a new submission.
 
-The most recent completed GitHub Actions run on `master` before this change
-tested R release on Linux, Windows, and macOS plus R-devel
-and oldrel-1 on Linux; all five jobs passed:
-https://github.com/sacrevert/occAssess2/actions/runs/40499503103
+GitHub Actions results for the release-preparation commit will be recorded in
+the pull request after the workflow completes. The workflow continues to cover
+R release on Linux, Windows, and macOS, plus R-devel and oldrel-1 on Linux.
 
 ## Initial check record (unmodified master, 2026-10-26)
 

@@ -5,7 +5,9 @@
 <code>occAssess</code> screens species-occurrence data for common forms of
 temporal, taxonomic, spatial, and environmental bias. The GitHub repository is
 named **occAssess2**, but the installed R package and the name used with
-<code>library()</code> are both **occAssess**. The original package is described in this [journal paper](https://onlinelibrary.wiley.com/doi/10.1002/ece3.8299).
+<code>library()</code> are both **occAssess**. The original package is described
+by Boyd et al. (2021) in
+[Ecology and Evolution](https://doi.org/10.1002/ece3.8299).
 
 ## Installation
 
@@ -236,6 +238,22 @@ browseVignettes("occAssess")
 
 Current CRAN-preparation results and known submission notes are recorded in
 [cran-comments.md](cran-comments.md).
+
+## Citation
+
+To retrieve the complete package citation and its BibTeX representation after
+installation, run:
+
+~~~r
+citation("occAssess")
+toBibtex(citation("occAssess"))
+~~~
+
+The preferred citation is the original package paper: Boyd, R. J., Powney,
+G. D., Carvell, C., and Pescott, O. L. (2021),
+"occAssess: An R package for assessing potential biases in species occurrence
+data," *Ecology and Evolution*, 11(22), 16177–16187,
+[doi:10.1002/ece3.8299](https://doi.org/10.1002/ece3.8299).
 
 ## License
 
