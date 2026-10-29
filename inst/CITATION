@@ -1,0 +1,18 @@
+citHeader("To cite occAssess in publications use:")
+
+bibentry(
+  bibtype = "Article",
+  title = "occAssess: An R package for assessing potential biases in species occurrence data",
+  author = c(
+    person("Robin J.", "Boyd"),
+    person("Gary D.", "Powney"),
+    person("Claire", "Carvell"),
+    person("Oliver L.", "Pescott")
+  ),
+  journal = "Ecology and Evolution",
+  year = "2021",
+  volume = "11",
+  number = "22",
+  pages = "16177--16187",
+  doi = "10.1002/ece3.8299"
+)

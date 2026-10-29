@@ -4,4 +4,7 @@
 ^\.github$
 ^cran-comments\.md$
 ^CONTRIBUTING\.md$
+^CITATION\.cff$
+^COMPATIBILITY\.md$
+^RELEASE\.md$
 ^vignettes/.*\.orig$
