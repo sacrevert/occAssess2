@@ -74,7 +74,7 @@ the caller sets the random-number seed.
 \details{
 Every occurrence is assigned to at most one period before optional
 coordinate degradation. Temporal diagnostics are stored in the result's
-\code{temporalDiagnostics} attribute.
+\code{temporalDiagnostics} attribute. Records with missing or non-finite x or y coordinates are excluded with a warning before nearest-neighbour distances are calculated.
 }
 \seealso{
 \code{\link[=assessSpatialCov]{assessSpatialCov()}} and \link{temporal-assignment}
