@@ -32,7 +32,7 @@
 #'   exact-year assignment; see Details.
 #' @details Every occurrence is assigned to at most one period before optional
 #'   coordinate degradation. Temporal diagnostics are stored in the result's
-#'   `temporalDiagnostics` attribute.
+#'   `temporalDiagnostics` attribute. Records with missing or non-finite x or y coordinates are excluded with a warning before nearest-neighbour distances are calculated.
 #' @seealso [assessSpatialCov()] and [temporal-assignment]
 #' @return A list with \code{data}, a data frame containing mean, 5th-percentile,
 #'   and 95th-percentile nearest-neighbour indices by period and identifier; and
@@ -97,6 +97,22 @@ assessSpatialBias <- function(dat,
   diagnostics <- selection$diagnostics
   dat <- dat[selection$keep, , drop = FALSE]
   if (nrow(dat) == 0) stop("No records fall within the requested periods.")
+  
+  # Exclude records with missing or non-finite coordinates
+  validXY <- is.finite(dat$x) & is.finite(dat$y)
+
+if(any(!validXY)) {
+    warning(sum(!validXY),
+            " records removed due to missing or non-finite
+coordinates.",
+            call. = FALSE)
+    
+    dat <- dat[validXY,, drop = FALSE]
+}
+
+if (nrow(dat) == 0) {
+       stop("No records with valid coordinates remain.")
+}
   dat <- dat[order(dat$year), , drop = FALSE]
 
 
